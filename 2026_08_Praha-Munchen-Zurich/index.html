@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kocourovy cesty</title>
+<style>
+:root{--bg:#f5f3ee;--text:#111;--muted:#777;--line:#d9d5cc;--card:#ebe7df}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;padding:28px 42px;border-bottom:1px solid var(--line)}
+.brand{font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+nav{display:flex;gap:24px;font-size:13px;text-transform:uppercase;letter-spacing:.08em}
+a{color:inherit;text-decoration:none}
+main{max-width:1400px;margin:auto;padding:42px}
+.section-title{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}
+.section-title h1{margin:0;font-size:14px;text-transform:uppercase;letter-spacing:.12em}
+.section-title span{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{display:block;min-height:420px;background:var(--card);position:relative;overflow:hidden;transition:transform .18s ease}
+.card:hover{transform:translateY(-3px)}
+.route{position:absolute;left:15%;top:25%;width:70%;height:45%}
+.route path{fill:none;stroke:#111;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.meta{position:absolute;left:22px;right:22px;bottom:20px;display:flex;justify-content:space-between;align-items:end;gap:16px}
+.title{font-size:24px;font-weight:700;line-height:1.05}
+.date{font-size:12px;color:var(--muted);white-space:nowrap;letter-spacing:.08em}
+.archive{margin-top:30px;border-top:1px solid var(--line);padding-top:20px;display:flex;justify-content:flex-end}
+.archive a{font-size:13px;text-transform:uppercase;letter-spacing:.1em}
+footer{max-width:1400px;margin:auto;padding:34px 42px 50px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+@media(max-width:900px){header{padding:20px}main{padding:24px 20px}.grid{grid-template-columns:1fr}.card{min-height:360px}}
+</style>
+</head>
+<body>
+<header>
+<div class="brand">Kocourovy cesty</div>
+<nav><a href="#cesty">Cesty</a><a href="archiv.html">Archiv</a></nav>
+</header>
+<main>
+<section id="cesty">
+<div class="section-title"><h1>Poslední cesty</h1><span>Nejnovější</span></div>
+<div class="grid">
+<a class="card" href="2026_08_Praha-Munchen-Zurich/">
+<svg class="route" viewBox="0 0 600 280" aria-hidden="true"><path d="M40 210 C85 185 105 170 150 175 C200 180 220 130 260 135 C300 140 315 95 350 105 C395 118 425 90 455 72 C500 46 525 55 560 40"/></svg>
+<div class="meta"><div class="title">Praha – Mnichov – Curych</div><div class="date">08 / 2026</div></div>
+</a>
+</div>
+</section>
+<div class="archive"><a href="archiv.html">Archiv →</a></div>
+</main>
+<footer>Kocourovy cesty</footer>
+</body>
+</html>
