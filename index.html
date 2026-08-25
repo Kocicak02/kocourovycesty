@@ -1,6 +1,4 @@
-from pathlib import Path
-
-html = r"""<!doctype html>
+<!doctype html>
 <html lang="cs">
 <head>
   <meta charset="utf-8">
@@ -272,8 +270,3 @@ html = r"""<!doctype html>
 
 </body>
 </html>
-"""
-
-out = Path("/mnt/data/kocourovycesty_homepage_navrh.html")
-out.write_text(html, encoding="utf-8")
-print(out)
