@@ -1,0 +1,53 @@
+from pathlib import Path
+import re
+
+src = Path("/mnt/data/66eb76b9-b262-4e85-b39a-0df057f4b1f1.html")
+out = Path("/mnt/data/kocourovycesty_mapa_upravena_znovu.html")
+
+text = src.read_text(encoding="utf-8")
+
+VIDEO_BASE = "https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/VIDEO/"
+PHOTO_BASE = "https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/FOTO/"
+
+video_new = f'''function pop_Videa_12(feature, layer) {{
+            var filename = feature.properties['filename'] || '';
+            var videoUrl = "{VIDEO_BASE}" + encodeURIComponent(filename);
+            var popupContent =
+                '<div style="width:min(80vw,520px);">' +
+                '<video controls preload="metadata" playsinline style="display:block;width:100%;height:auto;max-height:70vh;background:#000;">' +
+                '<source src="' + videoUrl + '">' +
+                '</video></div>';
+            layer.bindPopup(popupContent, {{maxWidth: 560, maxHeight: 600}});
+        }}'''
+
+text, n1 = re.subn(
+    r"function pop_Videa_12\(feature, layer\) \{.*?\n\s*\}(?=\n\n\s*function style_Videa_12_0)",
+    video_new,
+    text,
+    count=1,
+    flags=re.S
+)
+
+photo_new = f'''function pop_Fotky_podle_casu_14(feature, layer) {{
+            var filename = feature.properties['filename'] || '';
+            var photoUrl = "{PHOTO_BASE}" + encodeURIComponent(filename);
+            var popupContent =
+                '<div style="width:min(80vw,520px);">' +
+                '<img src="' + photoUrl + '" alt="" style="display:block;width:100%;height:auto;max-height:70vh;object-fit:contain;">' +
+                '</div>';
+            layer.bindPopup(popupContent, {{maxWidth: 560, maxHeight: 600}});
+        }}'''
+
+text, n2 = re.subn(
+    r"function pop_Fotky_podle_casu_14\(feature, layer\) \{.*?\n\s*\}(?=\n\n\s*function style_Fotky_podle_casu_14_0)",
+    photo_new,
+    text,
+    count=1,
+    flags=re.S
+)
+
+assert n1 == 1, f"Video popup nebyl upraven jednoznačně: {n1}"
+assert n2 == 1, f"Foto popup nebyl upraven jednoznačně: {n2}"
+
+out.write_text(text, encoding="utf-8")
+print(out)
