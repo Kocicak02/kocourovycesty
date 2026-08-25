@@ -1140,20 +1140,23 @@
         bounds_group.addLayer(layer_Videa_12);
         map.addLayer(layer_Videa_12);
         function pop_Fotky_13(feature, layer) {
-            var popupContent = '<table>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['photo'] !== null ? '<img src="images/' + String(feature.properties['photo']).replace(/[\\/:]/g, '_').trim().replace(/'/g, '\'').replace(/"/g, '&quot;') + '">' : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['timestamp'] !== null ? autolinker.link(String(feature.properties['timestamp']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                </table>';
-            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
-			layer.on('popupopen', function(e) {
-				addClassToPopupIfMedia(content, e.popup);
-			});
-			layer.bindPopup(content, { maxHeight: 400 });
+            var rawPhoto = feature.properties['photo'] || '';
+            var filename = String(rawPhoto).split(/[/\]/).pop();
+            var photoUrl = "https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/FOTO/" + encodeURIComponent(filename);
+
+            var popupContent =
+                '<div style="width:min(80vw,520px);">' +
+                    '<img src="' + photoUrl + '" alt="" ' +
+                    'style="display:block;width:100%;height:auto;max-height:70vh;object-fit:contain;">' +
+                '</div>';
+
+            layer.bindPopup(popupContent, {
+                maxWidth: 560,
+                maxHeight: 600
+            });
         }
+
+        
 
         function style_Fotky_13_0() {
             return {
