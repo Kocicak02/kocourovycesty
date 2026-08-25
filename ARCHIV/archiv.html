@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Archiv — Kocourovy cesty</title>
+<style>
+:root{--bg:#f5f3ee;--text:#111;--muted:#777;--line:#d9d5cc}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;padding:28px 42px;border-bottom:1px solid var(--line)}
+.brand{font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+a{color:inherit;text-decoration:none}
+nav{display:flex;gap:24px;font-size:13px;text-transform:uppercase;letter-spacing:.08em}
+main{max-width:1400px;margin:auto;padding:42px}
+h1{margin:0 0 36px;font-size:14px;text-transform:uppercase;letter-spacing:.12em}
+.trip{display:grid;grid-template-columns:110px 1fr auto;gap:25px;align-items:center;padding:25px 0;border-top:1px solid var(--line)}
+.trip:last-child{border-bottom:1px solid var(--line)}
+.date{font-size:12px;color:var(--muted);letter-spacing:.08em}
+.name{font-size:24px;font-weight:700}
+.arrow{font-size:20px}
+.trip:hover .arrow{transform:translateX(4px)}
+.arrow{transition:transform .18s ease}
+@media(max-width:700px){header{padding:20px}main{padding:24px 20px}.trip{grid-template-columns:1fr auto}.date{grid-column:1/-1}.name{font-size:20px}}
+</style>
+</head>
+<body>
+<header>
+<a class="brand" href="index.html">Kocourovy cesty</a>
+<nav><a href="index.html">Cesty</a><a href="archiv.html">Archiv</a></nav>
+</header>
+<main>
+<h1>Archiv cest</h1>
+<a class="trip" href="2026_08_Praha-Munchen-Zurich/">
+<div class="date">08 / 2026</div>
+<div class="name">Praha – Mnichov – Curych</div>
+<div class="arrow">→</div>
+</a>
+</main>
+</body>
+</html>
