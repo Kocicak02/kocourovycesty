@@ -181,7 +181,10 @@ function gpsPhotoPopup(feature){
   // Přesně podle názvů na Bunny:
   // C:\Users\kocka\Desktop\vse\IMG_2972.JPEG
   // -> C__Users_kocka_Desktop_vse_IMG_2972.JPEG
-  const bunnyName = rawPhoto.replace(/[\\/:]/g, "_").trim();
+  const bunnyName = rawPhoto
+    .replace(/^([A-Za-z]):[\\/]/, "$1__")
+    .replace(/[\\/]/g, "_")
+    .trim();
   const url = PHOTO_BASE + encodeURIComponent(bunnyName);
 
   return `
