@@ -3,353 +3,248 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Praha – Mnichov – Curych — Kocourovy cesty</title>
+<title>Mapa — Praha – Mnichov – Curych</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
 <style>
-:root{
-  --bg:#f5f3ee;
-  --text:#111;
-  --muted:#777;
-  --line:#d9d5cc;
-  --card:#ebe7df;
-}
-*{box-sizing:border-box}
-html,body{
+html,body,#map{
+  width:100%;
+  height:100%;
   margin:0;
-  background:var(--bg);
-  color:var(--text);
+}
+html,body{
+  overflow:hidden;
   font-family:Arial,Helvetica,sans-serif;
 }
-a{color:inherit;text-decoration:none}
-
-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:28px 42px;
-  border-bottom:1px solid var(--line);
+#map{
+  position:absolute;
+  inset:0;
 }
-.brand{
-  font-size:18px;
-  font-weight:700;
-  letter-spacing:.06em;
-  text-transform:uppercase;
+.leaflet-popup-content{
+  margin:12px 14px;
+  min-width:220px;
 }
-nav{
-  font-size:13px;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-}
-
-main{
-  max-width:1400px;
-  margin:auto;
-  padding:42px;
-}
-
-.hero{
-  display:flex;
-  justify-content:space-between;
-  align-items:end;
-  gap:30px;
-  padding-bottom:28px;
-  border-bottom:1px solid var(--line);
-}
-.hero h1{
-  margin:0;
-  font-size:42px;
-  line-height:1.02;
-}
-.hero .date{
-  font-size:13px;
-  color:var(--muted);
-  letter-spacing:.1em;
-  white-space:nowrap;
-}
-
-.quick-links{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-top:20px;
-}
-.quick-links a{
-  border:1px solid var(--line);
-  padding:10px 14px;
-  font-size:12px;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  transition:.15s ease;
-}
-.quick-links a:hover{
-  background:#111;
-  color:#fff;
-  border-color:#111;
-}
-
-.stats{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:1px;
-  background:var(--line);
-  margin-top:28px;
-  border:1px solid var(--line);
-}
-.stat{
-  background:var(--bg);
-  padding:22px 18px;
-}
-.stat .label{
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.1em;
-  color:var(--muted);
-  margin-bottom:8px;
-}
-.stat .value{
-  font-size:24px;
-  font-weight:700;
-}
-
-.section{
-  margin-top:48px;
-}
-.section h2{
-  margin:0 0 18px;
-  font-size:14px;
-  text-transform:uppercase;
-  letter-spacing:.12em;
-}
-
-.stage-list{
-  border-top:1px solid var(--line);
-}
-.stage{
-  display:grid;
-  grid-template-columns:60px 1.7fr .7fr .7fr .7fr auto;
-  gap:18px;
-  align-items:center;
-  padding:18px 0;
-  border-bottom:1px solid var(--line);
-}
-.stage .num{
-  color:var(--muted);
-  font-size:12px;
-  letter-spacing:.08em;
-}
-.stage .route{
-  font-size:18px;
-  font-weight:700;
-}
-.stage .metric{
-  font-size:14px;
-}
-.stage .metric span{
+.media-popup img{
   display:block;
-  font-size:10px;
-  color:var(--muted);
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  margin-bottom:4px;
-}
-.stage-links{
-  display:flex;
-  gap:8px;
-}
-.stage-links a{
-  border:1px solid var(--line);
-  padding:8px 10px;
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.07em;
-  white-space:nowrap;
-}
-.stage-links a:hover{
-  background:#111;
-  color:white;
-  border-color:#111;
-}
-
-.media-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:16px;
-}
-.media-card{
-  background:var(--card);
-  min-height:220px;
-  display:flex;
-  align-items:flex-end;
-  padding:22px;
-  position:relative;
-  overflow:hidden;
-}
-.media-card strong{
-  font-size:24px;
-}
-.media-card span{
-  display:block;
-  color:var(--muted);
-  margin-top:6px;
-  font-size:12px;
-}
-.media-card:hover{
-  outline:1px solid #b8b2a8;
-}
-
-.map-wrap{
-  border:1px solid var(--line);
-  background:var(--card);
-  overflow:hidden;
-}
-.map-wrap iframe{
   width:100%;
-  height:600px;
-  border:0;
+  max-width:520px;
+  height:auto;
+  border-radius:3px;
+}
+.media-popup video{
   display:block;
+  width:100%;
+  max-width:520px;
+  max-height:520px;
+  background:#000;
 }
-
-footer{
-  max-width:1400px;
-  margin:auto;
-  padding:34px 42px 50px;
-  color:var(--muted);
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-}
-
-@media(max-width:1000px){
-  .stats{grid-template-columns:repeat(2,1fr)}
-  .stage{grid-template-columns:50px 1fr}
-  .stage .metric,.stage-links{grid-column:2}
-  .media-grid{grid-template-columns:1fr}
-}
-@media(max-width:700px){
-  header{padding:20px}
-  main{padding:24px 20px}
-  .hero{align-items:start;flex-direction:column}
-  .hero h1{font-size:32px}
-  .map-wrap iframe{height:500px}
+.media-name{
+  margin-top:7px;
+  font-size:12px;
+  color:#555;
+  word-break:break-word;
 }
 </style>
 </head>
+
 <body>
+<div id="map"></div>
 
-<header>
-  <a class="brand" href="/">Kocourovy cesty</a>
-  <nav><a href="/archiv.html">Archiv</a></nav>
-</header>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<main>
+<!-- DATA Z TVÉHO QGIS2WEB EXPORTU -->
+<script src="data/tracks_1.js"></script>
+<script src="data/tracks_2.js"></script>
+<script src="data/tracks_3.js"></script>
+<script src="data/tracks_4.js"></script>
+<script src="data/tracks_5.js"></script>
+<script src="data/tracks_6.js"></script>
+<script src="data/tracks_7.js"></script>
+<script src="data/tracks_8.js"></script>
+<script src="data/tracks_9.js"></script>
+<script src="data/tracks_10.js"></script>
+<script src="data/tracks_11.js"></script>
 
-  <section class="hero">
-    <div>
-      <h1>Praha – Mnichov – Curych</h1>
-      <div class="quick-links">
-        <a href="#etapy">Etapy</a>
-        <a href="#fotky">Fotky</a>
-        <a href="#videa">Videa</a>
-        <a href="#mapa">Mapa</a>
-      </div>
-    </div>
-    <div class="date">08 / 2026</div>
-  </section>
+<script src="data/Videa_12.js"></script>
+<script src="data/Fotky_13.js"></script>
+<script src="data/Fotky_podle_casu_14.js"></script>
 
-  <section class="stats">
-    <div class="stat">
-      <div class="label">Celkem</div>
-      <div class="value">— km</div>
-    </div>
-    <div class="stat">
-      <div class="label">Převýšení</div>
-      <div class="value">+— m</div>
-    </div>
-    <div class="stat">
-      <div class="label">Doba jízdy</div>
-      <div class="value">— h</div>
-    </div>
-    <div class="stat">
-      <div class="label">Počet etap</div>
-      <div class="value">—</div>
-    </div>
-    <div class="stat">
-      <div class="label">Průměr / den</div>
-      <div class="value">— km</div>
-    </div>
-  </section>
+<script>
+const PHOTO_BASE = "https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/FOTO/";
+const VIDEO_BASE = "https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/VIDEO/";
 
-  <section class="section" id="etapy">
-    <h2>Etapy</h2>
+const map = L.map("map", {
+  zoomControl: true
+});
 
-    <div class="stage-list">
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution: "&copy; OpenStreetMap contributors"
+}).addTo(map);
 
-      <div class="stage">
-        <div class="num">01</div>
-        <div class="route">Praha → …</div>
-        <div class="metric"><span>Vzdálenost</span>— km</div>
-        <div class="metric"><span>Převýšení</span>+— m</div>
-        <div class="metric"><span>Čas</span>— h</div>
-        <div class="stage-links">
-          <a href="#fotky">Fotky</a>
-          <a href="#videa">Videa</a>
-        </div>
-      </div>
+const allBounds = L.latLngBounds();
 
-      <div class="stage">
-        <div class="num">02</div>
-        <div class="route">… → …</div>
-        <div class="metric"><span>Vzdálenost</span>— km</div>
-        <div class="metric"><span>Převýšení</span>+— m</div>
-        <div class="metric"><span>Čas</span>— h</div>
-        <div class="stage-links">
-          <a href="#fotky">Fotky</a>
-          <a href="#videa">Videa</a>
-        </div>
-      </div>
+function escapeHtml(value){
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;");
+}
 
-      <div class="stage">
-        <div class="num">03</div>
-        <div class="route">… → Mnichov</div>
-        <div class="metric"><span>Vzdálenost</span>— km</div>
-        <div class="metric"><span>Převýšení</span>+— m</div>
-        <div class="metric"><span>Čas</span>— h</div>
-        <div class="stage-links">
-          <a href="#fotky">Fotky</a>
-          <a href="#videa">Videa</a>
-        </div>
-      </div>
+function basename(path){
+  if(!path) return "";
+  return String(path).replaceAll("\\","/").split("/").pop();
+}
 
-    </div>
-  </section>
+function fileFromProperties(props){
+  props = props || {};
 
-  <section class="section">
-    <h2>Média</h2>
-    <div class="media-grid">
-      <a class="media-card" id="fotky" href="/2026_08_Praha-Munchen-Zurich/#fotky">
-        <div>
-          <strong>Fotky</strong>
-          <span>Otevřít fotky v mapě</span>
-        </div>
+  // U GPS fotek bývá kompletní název v "photo".
+  let f = basename(props.photo || props.path || props.file || "");
+
+  // U ostatních vrstev může být jen filename.
+  if(!f) f = basename(props.filename || props.name || "");
+
+  return f;
+}
+
+function ensurePhotoExtension(name){
+  if(!name) return "";
+  if(/\.(jpg|jpeg|png|webp|gif|heic)$/i.test(name)) return name;
+  return name + ".jpg";
+}
+
+function photoPopup(feature){
+  const p = feature.properties || {};
+  const file = ensurePhotoExtension(fileFromProperties(p));
+  if(!file) return "Fotka";
+
+  const url = PHOTO_BASE + encodeURIComponent(file);
+  return `
+    <div class="media-popup">
+      <a href="${url}" target="_blank" rel="noopener">
+        <img src="${url}" alt="${escapeHtml(file)}">
       </a>
+      <div class="media-name">${escapeHtml(file)}</div>
+    </div>`;
+}
 
-      <a class="media-card" id="videa" href="/2026_08_Praha-Munchen-Zurich/#videa">
-        <div>
-          <strong>Videa</strong>
-          <span>Otevřít videa v mapě</span>
-        </div>
-      </a>
-    </div>
-  </section>
+function videoPopup(feature){
+  const p = feature.properties || {};
+  let file = fileFromProperties(p);
+  if(!file) return "Video";
 
-  <section class="section" id="mapa">
-    <h2>Mapa</h2>
-    <div class="map-wrap">
-      <iframe src="/2026_08_Praha-Munchen-Zurich/" loading="lazy"></iframe>
-    </div>
-  </section>
+  const url = VIDEO_BASE + encodeURIComponent(file);
+  return `
+    <div class="media-popup">
+      <video controls preload="metadata">
+        <source src="${url}">
+        Prohlížeč toto video nepodporuje.
+      </video>
+      <div class="media-name">${escapeHtml(file)}</div>
+    </div>`;
+}
 
-</main>
+function addGeoJson(data, options){
+  if(!data || !data.type) return;
 
-<footer>Kocourovy cesty</footer>
+  const layer = L.geoJSON(data, options).addTo(map);
+
+  try{
+    const b = layer.getBounds();
+    if(b && b.isValid()) allBounds.extend(b);
+  }catch(e){}
+}
+
+function findGeoJsonGlobals(){
+  const found = [];
+
+  for(const key of Object.keys(window)){
+    let value;
+    try{ value = window[key]; }catch(e){ continue; }
+
+    if(value &&
+       typeof value === "object" &&
+       (value.type === "FeatureCollection" || value.type === "Feature")){
+      found.push({key, value});
+    }
+  }
+
+  return found;
+}
+
+const datasets = findGeoJsonGlobals();
+
+datasets.forEach(({key, value}) => {
+  const k = key.toLowerCase();
+
+  if(k.includes("fotky_podle_casu")){
+    addGeoJson(value, {
+      pointToLayer: (feature, latlng) =>
+        L.circleMarker(latlng,{
+          radius:6,
+          color:"#fff",
+          weight:1.5,
+          fillColor:"#111",
+          fillOpacity:1
+        }),
+      onEachFeature: (feature, layer) =>
+        layer.bindPopup(photoPopup(feature), {maxWidth:560})
+    });
+    return;
+  }
+
+  if(k.includes("fotky")){
+    addGeoJson(value, {
+      pointToLayer: (feature, latlng) =>
+        L.circleMarker(latlng,{
+          radius:6,
+          color:"#fff",
+          weight:1.5,
+          fillColor:"#111",
+          fillOpacity:1
+        }),
+      onEachFeature: (feature, layer) =>
+        layer.bindPopup(photoPopup(feature), {maxWidth:560})
+    });
+    return;
+  }
+
+  if(k.includes("videa")){
+    addGeoJson(value, {
+      pointToLayer: (feature, latlng) =>
+        L.circleMarker(latlng,{
+          radius:7,
+          color:"#fff",
+          weight:2,
+          fillColor:"#111",
+          fillOpacity:1
+        }),
+      onEachFeature: (feature, layer) =>
+        layer.bindPopup(videoPopup(feature), {maxWidth:560})
+    });
+    return;
+  }
+
+  if(k.includes("track")){
+    addGeoJson(value, {
+      style:{
+        color:"#111",
+        weight:4,
+        opacity:.9
+      }
+    });
+  }
+});
+
+if(allBounds.isValid()){
+  map.fitBounds(allBounds, {padding:[25,25]});
+}else{
+  map.setView([47.3, 9.5], 7);
+}
+</script>
+
 </body>
 </html>
