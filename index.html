@@ -1096,8 +1096,12 @@
         map.addLayer(layer_tracks_11);
         function pop_Videa_12(feature, layer) {
             var filename = feature.properties['filename'] || '';
-            var mediaUrl = "https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/VIDEO/" + encodeURIComponent(filename);
-            var popupContent = '<div style="width:min(80vw,520px);"><video controls preload="metadata" playsinline style="display:block;width:100%;height:auto;max-height:70vh;background:#000;"><source src="' + mediaUrl + '"></video></div>';
+            var videoUrl = "https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/VIDEO/" + encodeURIComponent(filename);
+            var popupContent =
+                '<div style="width:min(80vw,520px);">' +
+                '<video controls preload="metadata" playsinline style="display:block;width:100%;height:auto;max-height:70vh;background:#000;">' +
+                '<source src="' + videoUrl + '">' +
+                '</video></div>';
             layer.bindPopup(popupContent, {maxWidth: 560, maxHeight: 600});
         }
 
@@ -1141,23 +1145,20 @@
         map.addLayer(layer_Videa_12);
         function pop_Fotky_13(feature, layer) {
             var rawPhoto = feature.properties['photo'] || '';
+            var safeName = String(rawPhoto)
+                .split('\\').join('_')
+                .split('/').join('_')
+                .split(':').join('_')
+                .trim();
 
-            // Stejný princip převodu názvu jako u qgis2web:
-            // např. C:\Users\kocka\Desktop\foto\IMG_1234.JPG
-            // -> C__Users_kocka_Desktop_foto_IMG_1234.JPG
-            var safeName = String(rawPhoto).replace(/[\\/:*?"<>| ]/g, '_');
-            var photoUrl = "https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/FOTO/" + encodeURIComponent(safeName);
+            var photoUrl = "https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/FOTO/" + safeName;
 
             var popupContent =
                 '<div style="width:min(80vw,520px);">' +
-                    '<img src="' + photoUrl + '" alt="" ' +
-                    'style="display:block;width:100%;height:auto;max-height:70vh;object-fit:contain;">' +
+                '<img src="' + photoUrl + '" alt="" style="display:block;width:100%;height:auto;max-height:70vh;object-fit:contain;">' +
                 '</div>';
 
-            layer.bindPopup(popupContent, {
-                maxWidth: 560,
-                maxHeight: 600
-            });
+            layer.bindPopup(popupContent, {maxWidth: 560, maxHeight: 600});
         }
 
         
@@ -1200,8 +1201,11 @@
         map.addLayer(layer_Fotky_13);
         function pop_Fotky_podle_casu_14(feature, layer) {
             var filename = feature.properties['filename'] || '';
-            var mediaUrl = "https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/FOTO/" + encodeURIComponent(filename);
-            var popupContent = '<div style="width:min(80vw,520px);"><img src="' + mediaUrl + '" alt="" style="display:block;width:100%;height:auto;max-height:70vh;object-fit:contain;"></div>';
+            var photoUrl = "https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/FOTO/" + encodeURIComponent(filename);
+            var popupContent =
+                '<div style="width:min(80vw,520px);">' +
+                '<img src="' + photoUrl + '" alt="" style="display:block;width:100%;height:auto;max-height:70vh;object-fit:contain;">' +
+                '</div>';
             layer.bindPopup(popupContent, {maxWidth: 560, maxHeight: 600});
         }
 
