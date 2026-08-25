@@ -27,26 +27,48 @@ main{max-width:1400px;margin:auto;padding:42px}
 .archive{margin-top:30px;border-top:1px solid var(--line);padding-top:20px;display:flex;justify-content:flex-end}
 .archive a{font-size:13px;text-transform:uppercase;letter-spacing:.1em}
 footer{max-width:1400px;margin:auto;padding:34px 42px 50px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
-@media(max-width:900px){header{padding:20px}main{padding:24px 20px}.grid{grid-template-columns:1fr}.card{min-height:360px}}
+@media(max-width:900px){
+  header{padding:20px}
+  main{padding:24px 20px}
+  .grid{grid-template-columns:1fr}
+  .card{min-height:360px}
+}
 </style>
 </head>
 <body>
+
 <header>
-<div class="brand">Kocourovy cesty</div>
-<nav><a href="#cesty">Cesty</a><a href="archiv.html">Archiv</a></nav>
+  <a class="brand" href="/">Kocourovy cesty</a>
+  <nav>
+    <a href="/archiv.html">Archiv</a>
+  </nav>
 </header>
+
 <main>
-<section id="cesty">
-<div class="section-title"><h1>Poslední cesty</h1><span>Nejnovější</span></div>
-<div class="grid">
-<a class="card" href="2026_08_Praha-Munchen-Zurich/">
-<svg class="route" viewBox="0 0 600 280" aria-hidden="true"><path d="M40 210 C85 185 105 170 150 175 C200 180 220 130 260 135 C300 140 315 95 350 105 C395 118 425 90 455 72 C500 46 525 55 560 40"/></svg>
-<div class="meta"><div class="title">Praha – Mnichov – Curych</div><div class="date">08 / 2026</div></div>
-</a>
-</div>
-</section>
-<div class="archive"><a href="archiv.html">Archiv →</a></div>
+  <section>
+    <div class="section-title">
+      <h1>Poslední cesty</h1>
+      <span>Nejnovější</span>
+    </div>
+
+    <div class="grid">
+      <a class="card" href="/2026_08_Praha-Munchen-Zurich/">
+        <svg class="route" viewBox="0 0 600 280" aria-hidden="true">
+          <path d="M40 210 C85 185 105 170 150 175 C200 180 220 130 260 135 C300 140 315 95 350 105 C395 118 425 90 455 72 C500 46 525 55 560 40"/>
+        </svg>
+        <div class="meta">
+          <div class="title">Praha – Mnichov – Curych</div>
+          <div class="date">08 / 2026</div>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <div class="archive">
+    <a href="/archiv.html">Archiv →</a>
+  </div>
 </main>
+
 <footer>Kocourovy cesty</footer>
 </body>
 </html>
