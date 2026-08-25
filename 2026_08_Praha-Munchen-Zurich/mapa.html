@@ -172,6 +172,27 @@ function photoPopup(feature){
     </div>`;
 }
 
+function gpsPhotoPopup(feature){
+  const p = feature.properties || {};
+  const rawPhoto = String(p.photo || "");
+
+  if(!rawPhoto) return "Fotka";
+
+  // Přesně podle názvů na Bunny:
+  // C:\Users\kocka\Desktop\vse\IMG_2972.JPEG
+  // -> C__Users_kocka_Desktop_vse_IMG_2972.JPEG
+  const bunnyName = rawPhoto.replace(/[\\/:]/g, "_").trim();
+  const url = PHOTO_BASE + encodeURIComponent(bunnyName);
+
+  return `
+    <div class="media-popup">
+      <a href="${url}" target="_blank" rel="noopener">
+        <img src="${url}" alt="${escapeHtml(bunnyName)}">
+      </a>
+      <div class="media-name">${escapeHtml(bunnyName)}</div>
+    </div>`;
+}
+
 function videoPopup(feature){
   const p = feature.properties || {};
   let file = fileFromProperties(p);
@@ -248,7 +269,7 @@ datasets.forEach(({key, value}) => {
           fillOpacity:1
         }),
       onEachFeature: (feature, layer) =>
-        layer.bindPopup(photoPopup(feature), {maxWidth:560})
+        layer.bindPopup(gpsPhotoPopup(feature), {maxWidth:560})
     });
     return;
   }
