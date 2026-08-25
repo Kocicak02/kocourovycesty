@@ -118,14 +118,55 @@ function ensurePhotoExtension(name){
 
 function photoPopup(feature){
   const p = feature.properties || {};
-  const file = ensurePhotoExtension(fileFromProperties(p));
+  let file = fileFromProperties(p);
   if(!file) return "Fotka";
 
-  const url = PHOTO_BASE + encodeURIComponent(file);
+  const dot = file.lastIndexOf(".");
+  const stem = dot >= 0 ? file.slice(0, dot) : file;
+  const ext = dot >= 0 ? file.slice(dot + 1) : "";
+
+  // Zkusíme nejdřív přesný název a pak běžné varianty přípon.
+  const candidates = [];
+  function add(name){
+    if(name && !candidates.includes(name)) candidates.push(name);
+  }
+
+  add(file);
+
+  if(ext){
+    add(stem + "." + ext.toLowerCase());
+    add(stem + "." + ext.toUpperCase());
+  }
+
+  add(stem + ".jpg");
+  add(stem + ".JPG");
+  add(stem + ".jpeg");
+  add(stem + ".JPEG");
+  add(stem + ".png");
+  add(stem + ".PNG");
+
+  const urls = candidates.map(name => PHOTO_BASE + encodeURIComponent(name));
+
+  const first = urls[0];
+
   return `
     <div class="media-popup">
-      <a href="${url}" target="_blank" rel="noopener">
-        <img src="${url}" alt="${escapeHtml(file)}">
+      <a href="${first}" target="_blank" rel="noopener" class="photo-link">
+        <img
+          src="${first}"
+          alt="${escapeHtml(file)}"
+          data-urls='${JSON.stringify(urls).replaceAll("'", "&#39;")}'
+          data-i="0"
+          onerror="
+            const urls = JSON.parse(this.dataset.urls);
+            let i = Number(this.dataset.i) + 1;
+            if(i < urls.length){
+              this.dataset.i = i;
+              this.src = urls[i];
+              this.parentElement.href = urls[i];
+            }
+          "
+        >
       </a>
       <div class="media-name">${escapeHtml(file)}</div>
     </div>`;
