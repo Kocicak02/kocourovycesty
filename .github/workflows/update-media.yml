@@ -1,0 +1,113 @@
+name: Aktualizace Bunny galerie
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "15 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update-media:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Stahnout repozitar
+        uses: actions/checkout@v4
+
+      - name: Nacist FOTO a VIDEO z Bunny a vytvorit media.js
+        env:
+          BUNNY_STORAGE_KEY: ${{ secrets.BUNNY_STORAGE_KEY }}
+          BUNNY_STORAGE_ZONE: ${{ secrets.BUNNY_STORAGE_ZONE }}
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          import urllib.request
+          from pathlib import Path
+
+          zone = os.environ["BUNNY_STORAGE_ZONE"]
+          key = os.environ["BUNNY_STORAGE_KEY"]
+
+          # POZOR:
+          # Na Bunny se slozka jmenuje Munich,
+          # zatimco na GitHubu mas slozku Munchen.
+          bunny_trip = "2026_08_Praha-Munich-Zurich"
+          github_trip = "2026_08_Praha-Munchen-Zurich"
+
+          def list_bunny(folder):
+              url = (
+                  f"https://storage.bunnycdn.com/"
+                  f"{zone}/{bunny_trip}/{folder}/"
+              )
+
+              request = urllib.request.Request(
+                  url,
+                  headers={
+                      "AccessKey": key,
+                      "Accept": "application/json"
+                  }
+              )
+
+              with urllib.request.urlopen(request) as response:
+                  data = json.load(response)
+
+              files = []
+
+              for item in data:
+                  if item.get("IsDirectory"):
+                      continue
+
+                  name = item.get("ObjectName")
+
+                  if name:
+                      files.append(name)
+
+              return sorted(files, key=str.lower)
+
+          photos = list_bunny("FOTO")
+          videos = list_bunny("VIDEO")
+
+          output = (
+              "// Tento soubor se generuje automaticky z Bunny Storage.\\n"
+              "// Neupravovat rucne.\\n\\n"
+              "window.MEDIA_PHOTOS = "
+              + json.dumps(
+                  photos,
+                  ensure_ascii=False,
+                  indent=2
+              )
+              + ";\\n\\n"
+              "window.MEDIA_VIDEOS = "
+              + json.dumps(
+                  videos,
+                  ensure_ascii=False,
+                  indent=2
+              )
+              + ";\\n"
+          )
+
+          target = Path(github_trip) / "media.js"
+          target.parent.mkdir(parents=True, exist_ok=True)
+          target.write_text(output, encoding="utf-8")
+
+          print(f"Fotky: {len(photos)}")
+          print(f"Videa: {len(videos)}")
+          print(f"Vytvoren: {target}")
+          PY
+
+      - name: Ulozit zmeny
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add 2026_08_Praha-Munchen-Zurich/media.js
+
+          if git diff --cached --quiet; then
+            echo "Na Bunny nejsou zadne nove zmeny."
+            exit 0
+          fi
+
+          git commit -m "Automaticka aktualizace galerie z Bunny"
+          git push
