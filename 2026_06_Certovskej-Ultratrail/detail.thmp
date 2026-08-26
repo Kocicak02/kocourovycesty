@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Čertovskej ultratrail 2026 — Kocourovy cesty</title>
+<style>
+:root{--bg:#f5f3ee;--text:#111;--muted:#777;--line:#d9d5cc;--card:#ebe7df}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+a{color:inherit;text-decoration:none}
+header{display:flex;justify-content:space-between;align-items:center;padding:28px 42px;border-bottom:1px solid var(--line)}
+.brand{font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+nav{font-size:13px;text-transform:uppercase;letter-spacing:.08em}
+main{max-width:1400px;margin:auto;padding:42px}
+.hero{display:flex;justify-content:space-between;align-items:end;gap:30px;padding-bottom:28px;border-bottom:1px solid var(--line)}
+.hero h1{margin:0;font-size:42px;line-height:1.03}
+.hero .date{font-size:13px;color:var(--muted);letter-spacing:.1em;white-space:nowrap}
+
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:28px}
+.stat{background:var(--bg);padding:22px 18px}
+.stat-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px}
+.stat-value{font-size:24px;font-weight:700}
+
+.section{margin-top:52px}
+.section h2{margin:0 0 18px;font-size:14px;text-transform:uppercase;letter-spacing:.12em}
+.table-wrap{overflow-x:auto;border-top:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;min-width:1200px}
+th,td{padding:17px 14px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;font-weight:400}
+td{font-size:14px}
+td.route{font-size:17px;font-weight:700}
+td.num{white-space:nowrap}
+tr.total td{font-weight:700;border-top:2px solid var(--text)}
+
+.media-tiles{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.media-tile{border:1px solid var(--line);background:var(--card);min-height:180px;padding:22px;cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end;transition:transform .15s ease,border-color .15s ease;user-select:none}
+.media-tile:hover{transform:translateY(-2px);border-color:#aaa49a}
+.media-tile-title{font-size:24px;font-weight:700}
+.media-tile-meta{margin-top:6px;color:var(--muted);font-size:12px}
+.media-tile-action{margin-top:12px;font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.media-panel{display:none;margin-top:16px}
+.media-panel.open{display:block}
+
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.photo-card{display:block;background:var(--card);overflow:hidden}
+.photo-card img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.video-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.video-card{display:flex;min-height:150px;background:var(--card);border:1px solid var(--line);padding:18px;flex-direction:column;justify-content:space-between}
+.video-icon{font-size:28px;line-height:1}
+.video-open{margin-top:18px;font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.caption{padding:8px 10px;font-size:11px;color:var(--muted);word-break:break-word}
+.empty{min-height:180px;background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+
+.map-placeholder{min-height:240px;border:1px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+
+footer{max-width:1400px;margin:auto;padding:34px 42px 50px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+@media(max-width:900px){
+ header{padding:20px} main{padding:24px 20px}
+ .hero{flex-direction:column;align-items:flex-start}.hero h1{font-size:32px}
+ .stats{grid-template-columns:repeat(2,1fr)}
+ .media-tiles{grid-template-columns:1fr}
+ .gallery{grid-template-columns:repeat(2,1fr)}
+ .video-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:560px){.gallery,.video-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="brand" href="/">Kocourovy cesty</a>
+  <nav><a href="/archiv.html">Archiv</a></nav>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Čertovskej ultratrail 2026</h1>
+    <div class="date">06 / 2026</div>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><div class="stat-label">Vzdálenost</div><div class="stat-value">68,20 km</div></div>
+    <div class="stat"><div class="stat-label">Čas aktivity</div><div class="stat-value">10:28:33</div></div>
+    <div class="stat"><div class="stat-label">Nastoupáno</div><div class="stat-value">1 870 m</div></div>
+    <div class="stat"><div class="stat-label">Ø tempo</div><div class="stat-value">9:13 /km</div></div>
+    <div class="stat"><div class="stat-label">Kalorie</div><div class="stat-value">5 467 kcal</div></div>
+  </section>
+
+  <section class="section">
+    <h2>Aktivita</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Datum</th><th>Odkud → kam</th><th>Vzdálenost</th><th>Čas aktivity</th>
+            <th>↑ Nahoru</th><th>↓ Dolů</th><th>Kalorie</th><th>Pocení</th>
+            <th>Ø tempo</th><th>Ø tep</th><th>Max. tep</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="num">6. 6. 2026</td>
+            <td class="route">Houska → Hamr na Jezeře</td>
+            <td class="num">68,20 km</td>
+            <td class="num">10:28:33</td>
+            <td class="num">↑ 1 870 m</td>
+            <td class="num">↓ 1 993 m</td>
+            <td class="num">5 467 kcal</td>
+            <td class="num">7 673 ml</td>
+            <td class="num">9:13 /km</td>
+            <td class="num">141 bpm</td>
+            <td class="num">171 bpm</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Média</h2>
+    <div class="media-tiles">
+      <div class="media-tile" onclick="togglePhotos()">
+        <div class="media-tile-title">Fotky</div>
+        <div class="media-tile-meta" id="photoMeta">0 fotek</div>
+        <div class="media-tile-action" id="photoAction">Rozbalit ↓</div>
+      </div>
+      <div class="media-tile" onclick="toggleVideos()">
+        <div class="media-tile-title">Videa</div>
+        <div class="media-tile-meta" id="videoMeta">0 videí</div>
+        <div class="media-tile-action" id="videoAction">Rozbalit ↓</div>
+      </div>
+    </div>
+    <div id="photoPanel" class="media-panel"><div id="photoGallery" class="gallery"></div></div>
+    <div id="videoPanel" class="media-panel"><div id="videoGallery" class="video-grid"></div></div>
+  </section>
+
+  <section class="section">
+    <h2>Mapa</h2>
+    <div class="map-placeholder">Mapu doplníme nakonec</div>
+  </section>
+</main>
+
+<footer>Kocourovy cesty</footer>
+
+<script src="media.js"></script>
+<script>
+const PHOTO_BASE="https://cesty.b-cdn.net/2026_06_Certovsky-Ultratrail/FOTO/";
+const VIDEO_BASE="https://cesty.b-cdn.net/2026_06_Certovsky-Ultratrail/VIDEO/";
+const photos=Array.isArray(window.MEDIA_PHOTOS)?window.MEDIA_PHOTOS:[];
+const videos=Array.isArray(window.MEDIA_VIDEOS)?window.MEDIA_VIDEOS:[];
+
+document.getElementById("photoMeta").textContent=`${photos.length} fotek`;
+document.getElementById("videoMeta").textContent=`${videos.length} videí`;
+let photosBuilt=false,videosBuilt=false;
+
+function buildPhotos(){
+ if(photosBuilt)return; photosBuilt=true;
+ const g=document.getElementById("photoGallery");
+ if(!photos.length){g.innerHTML='<div class="empty">Fotky nenalezeny</div>';return;}
+ photos.forEach(name=>{
+  const url=PHOTO_BASE+encodeURIComponent(name),a=document.createElement("a");
+  a.className="photo-card";a.href=url;a.target="_blank";a.rel="noopener";
+  const img=document.createElement("img");img.src=url;img.alt="";img.loading="lazy";
+  const c=document.createElement("div");c.className="caption";c.textContent=name;
+  a.append(img,c);g.appendChild(a);
+ });
+}
+function buildVideos(){
+ if(videosBuilt)return; videosBuilt=true;
+ const g=document.getElementById("videoGallery");
+ if(!videos.length){g.innerHTML='<div class="empty">Videa nenalezena</div>';return;}
+ videos.forEach(name=>{
+  const url=VIDEO_BASE+encodeURIComponent(name),a=document.createElement("a");
+  a.className="video-card";a.href=url;a.target="_blank";a.rel="noopener";
+  const i=document.createElement("div");i.className="video-icon";i.textContent="▶";
+  const c=document.createElement("div");c.className="caption";c.textContent=name;
+  const o=document.createElement("div");o.className="video-open";o.textContent="Otevřít video →";
+  a.append(i,c,o);g.appendChild(a);
+ });
+}
+function togglePhotos(){
+ const p=document.getElementById("photoPanel"),a=document.getElementById("photoAction"),open=!p.classList.contains("open");
+ if(open){buildPhotos();p.classList.add("open");a.textContent="Sbalit ↑"}else{p.classList.remove("open");a.textContent="Rozbalit ↓"}
+}
+function toggleVideos(){
+ const p=document.getElementById("videoPanel"),a=document.getElementById("videoAction"),open=!p.classList.contains("open");
+ if(open){buildVideos();p.classList.add("open");a.textContent="Sbalit ↑"}else{p.classList.remove("open");a.textContent="Rozbalit ↓"}
+}
+</script>
+</body>
+</html>
