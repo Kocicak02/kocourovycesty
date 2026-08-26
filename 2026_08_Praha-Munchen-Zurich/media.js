@@ -1,4 +1,7 @@
-// Tento soubor se generuje automaticky z Bunny Storage.\n// Neupravovat rucne.\n\nwindow.MEDIA_PHOTOS = [
+// Tento soubor se generuje automaticky z Bunny Storage.
+// Neupravovat rucne.
+
+window.MEDIA_PHOTOS = [
   "C__Users_kocka_Desktop_vse_1B0D37AA-2236-49B9-BD6B-CAF7FEAD3E49.jpg",
   "C__Users_kocka_Desktop_vse_IMG_2166(1).jpg",
   "C__Users_kocka_Desktop_vse_IMG_2166.jpg",
@@ -437,7 +440,9 @@
   "C__Users_kocka_Desktop_vse_IMG_3354.JPEG",
   "C__Users_kocka_Desktop_vse_IMG_3355.JPEG",
   "C__Users_kocka_Desktop_vse_IMG_5485.jpg"
-];\n\nwindow.MEDIA_VIDEOS = [
+];
+
+window.MEDIA_VIDEOS = [
   "1653D514-315E-49CE-A9E6-5207854BEE25.mov",
   "IMG_2269.mp4",
   "IMG_2352.mp4",
@@ -497,4 +502,4 @@
   "IMG_3304.MP4",
   "IMG_3327.MP4",
   "IMG_3334.MP4"
-];\n
+];
