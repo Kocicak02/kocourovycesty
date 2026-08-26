@@ -30,9 +30,7 @@ jobs:
           zone = os.environ["BUNNY_STORAGE_ZONE"]
           key = os.environ["BUNNY_STORAGE_KEY"]
 
-          # POZOR:
-          # Na Bunny se slozka jmenuje Munich,
-          # zatimco na GitHubu mas slozku Munchen.
+          # Na Bunny je Munich, na GitHubu Munchen
           bunny_trip = "2026_08_Praha-Munich-Zurich"
           github_trip = "2026_08_Praha-Munchen-Zurich"
 
@@ -70,22 +68,22 @@ jobs:
           videos = list_bunny("VIDEO")
 
           output = (
-              "// Tento soubor se generuje automaticky z Bunny Storage.\\n"
-              "// Neupravovat rucne.\\n\\n"
+              "// Tento soubor se generuje automaticky z Bunny Storage.\n"
+              "// Neupravovat rucne.\n\n"
               "window.MEDIA_PHOTOS = "
               + json.dumps(
                   photos,
                   ensure_ascii=False,
                   indent=2
               )
-              + ";\\n\\n"
+              + ";\n\n"
               "window.MEDIA_VIDEOS = "
               + json.dumps(
                   videos,
                   ensure_ascii=False,
                   indent=2
               )
-              + ";\\n"
+              + ";\n"
           )
 
           target = Path(github_trip) / "media.js"
