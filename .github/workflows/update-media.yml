@@ -1,4 +1,4 @@
-name: Aktualizace Bunny galerie
+name: Aktualizace Bunny galerii
 
 on:
   workflow_dispatch:
@@ -16,7 +16,7 @@ jobs:
       - name: Stahnout repozitar
         uses: actions/checkout@v4
 
-      - name: Nacist FOTO a VIDEO z Bunny a vytvorit media.js
+      - name: Automaticky nacist vsechny aktivity z Bunny
         env:
           BUNNY_STORAGE_KEY: ${{ secrets.BUNNY_STORAGE_KEY }}
           BUNNY_STORAGE_ZONE: ${{ secrets.BUNNY_STORAGE_ZONE }}
@@ -25,20 +25,31 @@ jobs:
           import json
           import os
           import urllib.request
+          import urllib.error
           from pathlib import Path
 
           zone = os.environ["BUNNY_STORAGE_ZONE"]
           key = os.environ["BUNNY_STORAGE_KEY"]
 
-          # Na Bunny je Munich, na GitHubu Munchen
-          bunny_trip = "2026_08_Praha-Munich-Zurich"
-          github_trip = "2026_08_Praha-Munchen-Zurich"
+          # --------------------------------------------------
+          # VYJIMKY V NAZVECH
+          # Bunny slozka -> GitHub slozka
+          #
+          # Budouci aktivity pojmenovavej na Bunny a GitHubu
+          # stejne a sem uz nebude potreba nic pridavat.
+          # --------------------------------------------------
 
-          def list_bunny(folder):
-              url = (
-                  f"https://storage.bunnycdn.com/"
-                  f"{zone}/{bunny_trip}/{folder}/"
-              )
+          NAME_MAP = {
+              "2026_08_Praha-Munich-Zurich":
+                  "2026_08_Praha-Munchen-Zurich",
+          }
+
+
+          def bunny_request(path=""):
+              url = f"https://storage.bunnycdn.com/{zone}/"
+
+              if path:
+                  url += path.strip("/") + "/"
 
               request = urllib.request.Request(
                   url,
@@ -49,7 +60,39 @@ jobs:
               )
 
               with urllib.request.urlopen(request) as response:
-                  data = json.load(response)
+                  return json.load(response)
+
+
+          def list_root_folders():
+              data = bunny_request()
+
+              folders = []
+
+              for item in data:
+                  if not item.get("IsDirectory"):
+                      continue
+
+                  name = item.get("ObjectName")
+
+                  if name:
+                      folders.append(name)
+
+              return sorted(folders, key=str.lower)
+
+
+          def list_media(activity, folder):
+              try:
+                  data = bunny_request(
+                      f"{activity}/{folder}"
+                  )
+
+              except urllib.error.HTTPError as error:
+
+                  # Slozka FOTO nebo VIDEO neexistuje.
+                  if error.code == 404:
+                      return []
+
+                  raise
 
               files = []
 
@@ -64,35 +107,96 @@ jobs:
 
               return sorted(files, key=str.lower)
 
-          photos = list_bunny("FOTO")
-          videos = list_bunny("VIDEO")
 
-          output = (
-              "// Tento soubor se generuje automaticky z Bunny Storage.\n"
-              "// Neupravovat rucne.\n\n"
-              "window.MEDIA_PHOTOS = "
-              + json.dumps(
-                  photos,
-                  ensure_ascii=False,
-                  indent=2
-              )
-              + ";\n\n"
-              "window.MEDIA_VIDEOS = "
-              + json.dumps(
-                  videos,
-                  ensure_ascii=False,
-                  indent=2
-              )
-              + ";\n"
+          activities = list_root_folders()
+
+          print(
+              f"Na Bunny nalezeno "
+              f"{len(activities)} hlavnich slozek."
           )
 
-          target = Path(github_trip) / "media.js"
-          target.parent.mkdir(parents=True, exist_ok=True)
-          target.write_text(output, encoding="utf-8")
 
-          print(f"Fotky: {len(photos)}")
-          print(f"Videa: {len(videos)}")
-          print(f"Vytvoren: {target}")
+          for bunny_activity in activities:
+
+              github_activity = NAME_MAP.get(
+                  bunny_activity,
+                  bunny_activity
+              )
+
+              photos = list_media(
+                  bunny_activity,
+                  "FOTO"
+              )
+
+              videos = list_media(
+                  bunny_activity,
+                  "VIDEO"
+              )
+
+              # Pokud nema ani FOTO ani VIDEO,
+              # nejde o aktivitu s galerii.
+              if not photos and not videos:
+                  print(
+                      f"Preskakuji {bunny_activity} "
+                      f"- zadna media."
+                  )
+                  continue
+
+
+              output = (
+                  "// Tento soubor se generuje "
+                  "automaticky z Bunny Storage.\n"
+                  "// Neupravovat rucne.\n\n"
+
+                  "window.MEDIA_PHOTOS = "
+                  + json.dumps(
+                      photos,
+                      ensure_ascii=False,
+                      indent=2
+                  )
+                  + ";\n\n"
+
+                  "window.MEDIA_VIDEOS = "
+                  + json.dumps(
+                      videos,
+                      ensure_ascii=False,
+                      indent=2
+                  )
+                  + ";\n"
+              )
+
+
+              target_folder = Path(github_activity)
+
+              # Bezpecnost:
+              # media.js vytvarime pouze pro aktivitu,
+              # ktera ma odpovidajici slozku na GitHubu.
+              if not target_folder.is_dir():
+                  print(
+                      f"Preskakuji {bunny_activity}: "
+                      f"GitHub slozka "
+                      f"{github_activity} neexistuje."
+                  )
+                  continue
+
+
+              target = target_folder / "media.js"
+
+              target.write_text(
+                  output,
+                  encoding="utf-8"
+              )
+
+
+              print("")
+              print(f"Aktivita: {bunny_activity}")
+              print(f"GitHub:    {github_activity}")
+              print(f"Fotky:     {len(photos)}")
+              print(f"Videa:     {len(videos)}")
+              print(f"Vytvoren:  {target}")
+              print("")
+
+
           PY
 
       - name: Ulozit zmeny
@@ -100,12 +204,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add 2026_08_Praha-Munchen-Zurich/media.js
+          git add -- '*/media.js'
 
           if git diff --cached --quiet; then
-            echo "Na Bunny nejsou zadne nove zmeny."
+            echo "Galerie jsou aktualni."
             exit 0
           fi
 
-          git commit -m "Automaticka aktualizace galerie z Bunny"
+          git commit -m "Automaticka aktualizace galerii z Bunny"
           git push
