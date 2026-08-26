@@ -161,6 +161,58 @@ tr.total td{
   border-top:2px solid var(--text);
 }
 
+/* MEDIA TILE */
+.media-tiles{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+
+.media-tile{
+  border:1px solid var(--line);
+  background:var(--card);
+  min-height:180px;
+  padding:22px;
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  transition:transform .15s ease,border-color .15s ease;
+  user-select:none;
+}
+
+.media-tile:hover{
+  transform:translateY(-2px);
+  border-color:#aaa49a;
+}
+
+.media-tile-title{
+  font-size:24px;
+  font-weight:700;
+}
+
+.media-tile-meta{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.media-tile-action{
+  margin-top:12px;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.media-panel{
+  display:none;
+  margin-top:16px;
+}
+
+.media-panel.open{
+  display:block;
+}
+
 .gallery{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -202,12 +254,6 @@ tr.total td{
   font-size:11px;
   color:var(--muted);
   word-break:break-word;
-}
-
-.media-count{
-  margin-top:10px;
-  font-size:12px;
-  color:var(--muted);
 }
 
 .empty{
@@ -254,6 +300,7 @@ footer{
   }
   .hero h1{font-size:32px}
   .stats{grid-template-columns:repeat(2,1fr)}
+  .media-tiles{grid-template-columns:1fr}
   .gallery{grid-template-columns:repeat(2,1fr)}
   .video-grid{grid-template-columns:1fr}
   .map-wrap iframe{height:560px}
@@ -343,15 +390,29 @@ footer{
   </section>
 
   <section class="section">
-    <h2>Fotky</h2>
-    <div id="photoGallery" class="gallery"></div>
-    <div id="photoCount" class="media-count"></div>
-  </section>
+    <h2>Média</h2>
 
-  <section class="section">
-    <h2>Videa</h2>
-    <div id="videoGallery" class="video-grid"></div>
-    <div id="videoCount" class="media-count"></div>
+    <div class="media-tiles">
+      <div class="media-tile" id="photoTile" onclick="togglePhotos()">
+        <div class="media-tile-title">Fotky</div>
+        <div class="media-tile-meta" id="photoMeta">Načítám počet…</div>
+        <div class="media-tile-action" id="photoAction">Rozbalit ↓</div>
+      </div>
+
+      <div class="media-tile" id="videoTile" onclick="toggleVideos()">
+        <div class="media-tile-title">Videa</div>
+        <div class="media-tile-meta" id="videoMeta">Načítám počet…</div>
+        <div class="media-tile-action" id="videoAction">Rozbalit ↓</div>
+      </div>
+    </div>
+
+    <div id="photoPanel" class="media-panel">
+      <div id="photoGallery" class="gallery"></div>
+    </div>
+
+    <div id="videoPanel" class="media-panel">
+      <div id="videoGallery" class="video-grid"></div>
+    </div>
   </section>
 
   <section class="section">
@@ -379,52 +440,6 @@ const PHOTO_BASE =
 const VIDEO_BASE =
   "https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/VIDEO/";
 
-function addPhoto(name){
-  const url = PHOTO_BASE + encodeURIComponent(name);
-
-  const card = document.createElement("a");
-  card.className = "photo-card";
-  card.href = url;
-  card.target = "_blank";
-  card.rel = "noopener";
-
-  const img = document.createElement("img");
-  img.src = url;
-  img.alt = "";
-  img.loading = "lazy";
-
-  const caption = document.createElement("div");
-  caption.className = "caption";
-  caption.textContent = name;
-
-  card.appendChild(img);
-  card.appendChild(caption);
-
-  document.getElementById("photoGallery").appendChild(card);
-}
-
-function addVideo(name){
-  const url = VIDEO_BASE + encodeURIComponent(name);
-
-  const card = document.createElement("div");
-  card.className = "video-card";
-
-  const video = document.createElement("video");
-  video.controls = true;
-  video.preload = "metadata";
-  video.playsInline = true;
-  video.src = url;
-
-  const caption = document.createElement("div");
-  caption.className = "caption";
-  caption.textContent = name;
-
-  card.appendChild(video);
-  card.appendChild(caption);
-
-  document.getElementById("videoGallery").appendChild(card);
-}
-
 const photos =
   Array.isArray(window.MEDIA_PHOTOS)
     ? window.MEDIA_PHOTOS
@@ -435,24 +450,121 @@ const videos =
     ? window.MEDIA_VIDEOS
     : [];
 
-if(photos.length){
-  photos.forEach(addPhoto);
+document.getElementById("photoMeta").textContent =
+  photos.length === 1
+    ? "1 fotka"
+    : `${photos.length} fotek`;
 
-  document.getElementById("photoCount").textContent =
-    `Celkem ${photos.length} fotek`;
-}else{
-  document.getElementById("photoGallery").innerHTML =
-    '<div class="empty">Fotky nenalezeny</div>';
+document.getElementById("videoMeta").textContent =
+  videos.length === 1
+    ? "1 video"
+    : `${videos.length} videí`;
+
+let photosBuilt = false;
+let videosBuilt = false;
+
+function buildPhotos(){
+  if(photosBuilt) return;
+  photosBuilt = true;
+
+  const gallery = document.getElementById("photoGallery");
+
+  if(!photos.length){
+    gallery.innerHTML =
+      '<div class="empty">Fotky nenalezeny</div>';
+    return;
+  }
+
+  photos.forEach(name => {
+    const url = PHOTO_BASE + encodeURIComponent(name);
+
+    const card = document.createElement("a");
+    card.className = "photo-card";
+    card.href = url;
+    card.target = "_blank";
+    card.rel = "noopener";
+
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = "";
+    img.loading = "lazy";
+
+    const caption = document.createElement("div");
+    caption.className = "caption";
+    caption.textContent = name;
+
+    card.appendChild(img);
+    card.appendChild(caption);
+
+    gallery.appendChild(card);
+  });
 }
 
-if(videos.length){
-  videos.forEach(addVideo);
+function buildVideos(){
+  if(videosBuilt) return;
+  videosBuilt = true;
 
-  document.getElementById("videoCount").textContent =
-    `Celkem ${videos.length} videí`;
-}else{
-  document.getElementById("videoGallery").innerHTML =
-    '<div class="empty">Videa nenalezena</div>';
+  const gallery = document.getElementById("videoGallery");
+
+  if(!videos.length){
+    gallery.innerHTML =
+      '<div class="empty">Videa nenalezena</div>';
+    return;
+  }
+
+  videos.forEach(name => {
+    const url = VIDEO_BASE + encodeURIComponent(name);
+
+    const card = document.createElement("div");
+    card.className = "video-card";
+
+    const video = document.createElement("video");
+    video.controls = true;
+    video.preload = "metadata";
+    video.playsInline = true;
+    video.src = url;
+
+    const caption = document.createElement("div");
+    caption.className = "caption";
+    caption.textContent = name;
+
+    card.appendChild(video);
+    card.appendChild(caption);
+
+    gallery.appendChild(card);
+  });
+}
+
+function togglePhotos(){
+  const panel = document.getElementById("photoPanel");
+  const action = document.getElementById("photoAction");
+
+  const opening = !panel.classList.contains("open");
+
+  if(opening){
+    buildPhotos();
+    panel.classList.add("open");
+    action.textContent = "Sbalit ↑";
+  }else{
+    panel.classList.remove("open");
+    action.textContent = "Rozbalit ↓";
+  }
+}
+
+function toggleVideos(){
+  const panel = document.getElementById("videoPanel");
+  const action = document.getElementById("videoAction");
+
+  const opening = !panel.classList.contains("open");
+
+  if(opening){
+    buildVideos();
+    panel.classList.add("open");
+    action.textContent = "Sbalit ↑";
+  }else{
+    panel.classList.remove("open");
+    action.textContent = "Rozbalit ↓";
+  }
 }
 </script>
 
