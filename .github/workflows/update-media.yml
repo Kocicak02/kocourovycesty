@@ -1,4 +1,4 @@
-name: Aktualizace Bunny galerii
+name: Aktualizace webu
 
 on:
   workflow_dispatch:
@@ -9,14 +9,14 @@ permissions:
   contents: write
 
 jobs:
-  update-media:
+  update-site:
     runs-on: ubuntu-latest
 
     steps:
       - name: Stahnout repozitar
         uses: actions/checkout@v4
 
-      - name: Automaticky nacist vsechny aktivity z Bunny
+      - name: Aktualizovat media a karty
         env:
           BUNNY_STORAGE_KEY: ${{ secrets.BUNNY_STORAGE_KEY }}
           BUNNY_STORAGE_ZONE: ${{ secrets.BUNNY_STORAGE_ZONE }}
@@ -27,25 +27,26 @@ jobs:
           import urllib.request
           import urllib.error
           from pathlib import Path
+          from html import escape
 
           zone = os.environ["BUNNY_STORAGE_ZONE"]
           key = os.environ["BUNNY_STORAGE_KEY"]
 
-          # --------------------------------------------------
-          # VYJIMKY V NAZVECH
-          # Bunny slozka -> GitHub slozka
-          #
-          # Budouci aktivity pojmenovavej na Bunny a GitHubu
-          # stejne a sem uz nebude potreba nic pridavat.
-          # --------------------------------------------------
-
+          # Jedina stara vyjimka:
+          # Bunny = Munich
+          # GitHub = Munchen
           NAME_MAP = {
               "2026_08_Praha-Munich-Zurich":
-                  "2026_08_Praha-Munchen-Zurich",
+                  "2026_08_Praha-Munchen-Zurich"
           }
 
 
+          # ==========================================
+          # BUNNY
+          # ==========================================
+
           def bunny_request(path=""):
+
               url = f"https://storage.bunnycdn.com/{zone}/"
 
               if path:
@@ -63,12 +64,14 @@ jobs:
                   return json.load(response)
 
 
-          def list_root_folders():
+          def root_folders():
+
               data = bunny_request()
 
               folders = []
 
               for item in data:
+
                   if not item.get("IsDirectory"):
                       continue
 
@@ -77,18 +80,19 @@ jobs:
                   if name:
                       folders.append(name)
 
-              return sorted(folders, key=str.lower)
+              return folders
 
 
-          def list_media(activity, folder):
+          def media_files(activity, folder):
+
               try:
+
                   data = bunny_request(
                       f"{activity}/{folder}"
                   )
 
               except urllib.error.HTTPError as error:
 
-                  # Slozka FOTO nebo VIDEO neexistuje.
                   if error.code == 404:
                       return []
 
@@ -97,6 +101,7 @@ jobs:
               files = []
 
               for item in data:
+
                   if item.get("IsDirectory"):
                       continue
 
@@ -105,47 +110,41 @@ jobs:
                   if name:
                       files.append(name)
 
-              return sorted(files, key=str.lower)
+              return sorted(
+                  files,
+                  key=str.lower
+              )
 
 
-          activities = list_root_folders()
+          # ==========================================
+          # MEDIA.JS
+          # ==========================================
 
-          print(
-              f"Na Bunny nalezeno "
-              f"{len(activities)} hlavnich slozek."
-          )
-
-
-          for bunny_activity in activities:
+          for bunny_activity in root_folders():
 
               github_activity = NAME_MAP.get(
                   bunny_activity,
                   bunny_activity
               )
 
-              photos = list_media(
+              folder = Path(github_activity)
+
+              # Aktivita jeste neni na GitHubu
+              if not folder.is_dir():
+                  continue
+
+              photos = media_files(
                   bunny_activity,
                   "FOTO"
               )
 
-              videos = list_media(
+              videos = media_files(
                   bunny_activity,
                   "VIDEO"
               )
 
-              # Pokud nema ani FOTO ani VIDEO,
-              # nejde o aktivitu s galerii.
-              if not photos and not videos:
-                  print(
-                      f"Preskakuji {bunny_activity} "
-                      f"- zadna media."
-                  )
-                  continue
-
-
               output = (
-                  "// Tento soubor se generuje "
-                  "automaticky z Bunny Storage.\n"
+                  "// Automaticky generovano z Bunny Storage.\n"
                   "// Neupravovat rucne.\n\n"
 
                   "window.MEDIA_PHOTOS = "
@@ -165,51 +164,432 @@ jobs:
                   + ";\n"
               )
 
-
-              target_folder = Path(github_activity)
-
-              # Bezpecnost:
-              # media.js vytvarime pouze pro aktivitu,
-              # ktera ma odpovidajici slozku na GitHubu.
-              if not target_folder.is_dir():
-                  print(
-                      f"Preskakuji {bunny_activity}: "
-                      f"GitHub slozka "
-                      f"{github_activity} neexistuje."
-                  )
-                  continue
-
-
-              target = target_folder / "media.js"
+              target = folder / "media.js"
 
               target.write_text(
                   output,
                   encoding="utf-8"
               )
 
+              print(
+                  github_activity,
+                  len(photos),
+                  "fotek,",
+                  len(videos),
+                  "videi"
+              )
 
-              print("")
-              print(f"Aktivita: {bunny_activity}")
-              print(f"GitHub:    {github_activity}")
-              print(f"Fotky:     {len(photos)}")
-              print(f"Videa:     {len(videos)}")
-              print(f"Vytvoren:  {target}")
-              print("")
 
+          # ==========================================
+          # CARD.JSON
+          # ==========================================
+
+          cards = []
+
+          for card_path in Path(".").glob("*/card.json"):
+
+              folder = card_path.parent
+
+              # Bez detail.html aktivitu nezobrazime
+              if not (folder / "detail.html").exists():
+                  continue
+
+              data = json.loads(
+                  card_path.read_text(
+                      encoding="utf-8"
+                  )
+              )
+
+              title = str(
+                  data.get("title", "")
+              ).strip()
+
+              if not title:
+                  continue
+
+              cards.append({
+                  "folder": folder.name,
+                  "title": title,
+                  "date": str(
+                      data.get("date", "")
+                  ).strip(),
+                  "type": str(
+                      data.get("type", "")
+                  ).strip(),
+                  "summary": str(
+                      data.get("summary", "")
+                  ).strip(),
+                  "image": str(
+                      data.get("image", "")
+                  ).strip(),
+                  "sort": str(
+                      data.get("sort", "")
+                  ).strip()
+              })
+
+
+          cards.sort(
+              key=lambda x: x["sort"],
+              reverse=True
+          )
+
+
+          # ==========================================
+          # HTML KARTY
+          # ==========================================
+
+          card_html = []
+
+          for card in cards:
+
+              image = ""
+
+              if card["image"]:
+
+                  image = (
+                      '<img class="card-image" src="'
+                      + escape(card["image"])
+                      + '" alt="">'
+                  )
+
+              type_html = ""
+
+              if card["type"]:
+
+                  type_html = (
+                      '<div class="card-type">'
+                      + escape(card["type"])
+                      + '</div>'
+                  )
+
+              summary = ""
+
+              if card["summary"]:
+
+                  summary = (
+                      '<div class="card-summary">'
+                      + escape(card["summary"])
+                      + '</div>'
+                  )
+
+              card_html.append(
+                  f'''
+                  <a class="card"
+                     href="/{escape(card["folder"])}/detail.html">
+
+                    {image}
+
+                    <div class="card-content">
+
+                      {type_html}
+
+                      <div class="card-title">
+                        {escape(card["title"])}
+                      </div>
+
+                      {summary}
+
+                      <div class="card-bottom">
+                        <span>
+                          {escape(card["date"])}
+                        </span>
+
+                        <span>
+                          Otevrit →
+                        </span>
+                      </div>
+
+                    </div>
+
+                  </a>
+                  '''
+              )
+
+
+          cards_output = "\n".join(
+              card_html
+          )
+
+
+          # ==========================================
+          # INDEX.HTML
+          # ==========================================
+
+          index = """<!doctype html>
+          <html lang="cs">
+
+          <head>
+
+          <meta charset="utf-8">
+
+          <meta
+            name="viewport"
+            content="width=device-width,initial-scale=1"
+          >
+
+          <title>Kocourovy cesty</title>
+
+          <style>
+
+          :root{
+            --bg:#f5f3ee;
+            --text:#111;
+            --muted:#777;
+            --line:#d9d5cc;
+            --card:#ebe7df;
+          }
+
+          *{
+            box-sizing:border-box;
+          }
+
+          html,body{
+            margin:0;
+            background:var(--bg);
+            color:var(--text);
+            font-family:Arial,Helvetica,sans-serif;
+          }
+
+          a{
+            color:inherit;
+            text-decoration:none;
+          }
+
+          header{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding:28px 42px;
+            border-bottom:1px solid var(--line);
+          }
+
+          .brand{
+            font-size:18px;
+            font-weight:700;
+            letter-spacing:.06em;
+            text-transform:uppercase;
+          }
+
+          nav{
+            font-size:13px;
+            text-transform:uppercase;
+            letter-spacing:.08em;
+          }
+
+          main{
+            max-width:1400px;
+            margin:auto;
+            padding:42px;
+          }
+
+          .head{
+            display:flex;
+            justify-content:space-between;
+            align-items:end;
+            margin-bottom:18px;
+          }
+
+          .head h1{
+            margin:0;
+            font-size:14px;
+            text-transform:uppercase;
+            letter-spacing:.12em;
+          }
+
+          .head span{
+            font-size:12px;
+            color:var(--muted);
+          }
+
+          .grid{
+            display:grid;
+            grid-template-columns:repeat(3,1fr);
+            gap:16px;
+          }
+
+          .card{
+            display:flex;
+            flex-direction:column;
+            min-height:390px;
+            background:var(--card);
+            overflow:hidden;
+            transition:transform .18s ease;
+          }
+
+          .card:hover{
+            transform:translateY(-3px);
+          }
+
+          .card-image{
+            width:100%;
+            height:250px;
+            object-fit:contain;
+            display:block;
+          }
+
+          .card-content{
+            display:flex;
+            flex:1;
+            flex-direction:column;
+            padding:22px;
+          }
+
+          .card-type{
+            margin-bottom:8px;
+            font-size:10px;
+            color:var(--muted);
+            text-transform:uppercase;
+            letter-spacing:.1em;
+          }
+
+          .card-title{
+            font-size:24px;
+            font-weight:700;
+            line-height:1.08;
+          }
+
+          .card-summary{
+            margin-top:9px;
+            font-size:13px;
+            color:var(--muted);
+          }
+
+          .card-bottom{
+            margin-top:auto;
+            padding-top:24px;
+            display:flex;
+            justify-content:space-between;
+            gap:15px;
+            font-size:11px;
+            color:var(--muted);
+            text-transform:uppercase;
+            letter-spacing:.08em;
+          }
+
+          footer{
+            max-width:1400px;
+            margin:auto;
+            padding:34px 42px 50px;
+            color:var(--muted);
+            font-size:11px;
+            text-transform:uppercase;
+            letter-spacing:.08em;
+          }
+
+          @media(max-width:900px){
+
+            header{
+              padding:20px;
+            }
+
+            main{
+              padding:24px 20px;
+            }
+
+            .grid{
+              grid-template-columns:1fr;
+            }
+
+          }
+
+          </style>
+
+          </head>
+
+          <body>
+
+          <header>
+
+            <a class="brand" href="/">
+              Kocourovy cesty
+            </a>
+
+            <nav>
+              <a href="/archiv.html">
+                Archiv
+              </a>
+            </nav>
+
+          </header>
+
+          <main>
+
+            <div class="head">
+
+              <h1>
+                Posledni aktivity
+              </h1>
+
+              <span>
+                __COUNT__ aktivit
+              </span>
+
+            </div>
+
+            <div class="grid">
+
+              __CARDS__
+
+            </div>
+
+          </main>
+
+          <footer>
+            Kocourovy cesty
+          </footer>
+
+          </body>
+
+          </html>
+          """
+
+          index = index.replace(
+              "__CARDS__",
+              cards_output
+          )
+
+          index = index.replace(
+              "__COUNT__",
+              str(len(cards))
+          )
+
+          Path("index.html").write_text(
+              index,
+              encoding="utf-8"
+          )
+
+          print(
+              "Homepage:",
+              len(cards),
+              "karet"
+          )
 
           PY
 
+
       - name: Ulozit zmeny
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git config user.name \
+            "github-actions[bot]"
+
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add index.html
 
           git add -- '*/media.js'
 
-          if git diff --cached --quiet; then
-            echo "Galerie jsou aktualni."
+          if git diff --cached --quiet
+          then
+
+            echo "Web je aktualni."
+
             exit 0
+
           fi
 
-          git commit -m "Automaticka aktualizace galerii z Bunny"
+          git commit \
+            -m "Automaticka aktualizace webu"
+
           git push
