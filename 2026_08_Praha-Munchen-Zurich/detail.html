@@ -120,7 +120,7 @@ main{
 table{
   width:100%;
   border-collapse:collapse;
-  min-width:760px;
+  min-width:1180px;
 }
 
 th,td{
@@ -142,7 +142,7 @@ td{
 }
 
 td.stage-no{
-  width:60px;
+  width:110px;
   color:var(--muted);
   font-size:12px;
 }
@@ -347,23 +347,23 @@ footer{
   <section class="stats">
     <div class="stat">
       <div class="stat-label">Celkem</div>
-      <div class="stat-value">— km</div>
+      <div class="stat-value">1 475,4 km</div>
     </div>
     <div class="stat">
-      <div class="stat-label">Převýšení</div>
-      <div class="stat-value">+— m</div>
+      <div class="stat-label">Nastoupáno</div>
+      <div class="stat-value">14 444 m</div>
     </div>
     <div class="stat">
-      <div class="stat-label">Doba jízdy</div>
-      <div class="stat-value">— h</div>
+      <div class="stat-label">Čas aktivity</div>
+      <div class="stat-value">69:51 h</div>
     </div>
     <div class="stat">
-      <div class="stat-label">Etapy</div>
-      <div class="stat-value">11</div>
+      <div class="stat-label">Kalorie</div>
+      <div class="stat-value">28 787 kcal</div>
     </div>
     <div class="stat">
-      <div class="stat-label">Průměr / den</div>
-      <div class="stat-value">— km</div>
+      <div class="stat-label">Aktivity</div>
+      <div class="stat-value">12</div>
     </div>
   </section>
 
@@ -374,33 +374,40 @@ footer{
       <table>
         <thead>
           <tr>
-            <th>Den</th>
-            <th>Etapa</th>
+            <th>Datum</th>
+            <th>Odkud → kam</th>
             <th>Vzdálenost</th>
-            <th>Převýšení</th>
-            <th>Čas</th>
+            <th>Čas aktivity</th>
+            <th>↑ Nahoru</th>
+            <th>↓ Dolů</th>
+            <th>Kalorie</th>
+            <th>Pocení</th>
+            <th>Ø rychlost</th>
           </tr>
         </thead>
-
         <tbody>
-          <tr><td class="stage-no">01</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-          <tr><td class="stage-no">02</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-          <tr><td class="stage-no">03</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-          <tr><td class="stage-no">04</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-          <tr><td class="stage-no">05</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-          <tr><td class="stage-no">06</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-          <tr><td class="stage-no">07</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-          <tr><td class="stage-no">08</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-          <tr><td class="stage-no">09</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-          <tr><td class="stage-no">10</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-          <tr><td class="stage-no">11</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-
+          <tr><td class="stage-no">7. 8. 2026</td><td class="route">Praha → Praha</td><td class="num">10,14 km</td><td class="num">0:33:07</td><td class="num">↑ 115 m</td><td class="num">↓ 77 m</td><td class="num">245 kcal</td><td class="num">267 ml</td><td class="num">18,4 km/h</td></tr>
+          <tr><td class="stage-no">7. 8. 2026</td><td class="route">Praha → okolí Přeštic</td><td class="num">137,10 km</td><td class="num">6:04:43</td><td class="num">↑ 1 212 m</td><td class="num">↓ 1 059 m</td><td class="num">2 756 kcal</td><td class="num">5 378 ml</td><td class="num">22,6 km/h</td></tr>
+          <tr><td class="stage-no">8. 8. 2026</td><td class="route">okolí Přeštic → Bavorsko</td><td class="num">158,27 km</td><td class="num">6:58:27</td><td class="num">↑ 1 319 m</td><td class="num">↓ 1 321 m</td><td class="num">2 993 kcal</td><td class="num">5 544 ml</td><td class="num">22,7 km/h</td></tr>
+          <tr><td class="stage-no">9. 8. 2026</td><td class="route">Bavorsko → Mnichov</td><td class="num">105,98 km</td><td class="num">4:31:09</td><td class="num">↑ 508 m</td><td class="num">↓ 407 m</td><td class="num">1 735 kcal</td><td class="num">2 709 ml</td><td class="num">23,5 km/h</td></tr>
+          <tr><td class="stage-no">11. 8. 2026</td><td class="route">Mnichov → Wangen im Allgäu</td><td class="num">178,92 km</td><td class="num">7:34:17</td><td class="num">↑ 1 334 m</td><td class="num">↓ 1 294 m</td><td class="num">3 081 kcal</td><td class="num">5 738 ml</td><td class="num">23,6 km/h</td></tr>
+          <tr><td class="stage-no">12. 8. 2026</td><td class="route">Wangen im Allgäu → Winterthur</td><td class="num">130,90 km</td><td class="num">5:40:48</td><td class="num">↑ 851 m</td><td class="num">↓ 936 m</td><td class="num">2 331 kcal</td><td class="num">4 921 ml</td><td class="num">23,0 km/h</td></tr>
+          <tr><td class="stage-no">13. 8. 2026</td><td class="route">Winterthur → Curych</td><td class="num">24,83 km</td><td class="num">1:16:31</td><td class="num">↑ 265 m</td><td class="num">↓ 301 m</td><td class="num">479 kcal</td><td class="num">607 ml</td><td class="num">19,5 km/h</td></tr>
+          <tr><td class="stage-no">17. 8. 2026</td><td class="route">okolí Curychu → Bregenz</td><td class="num">167,42 km</td><td class="num">8:48:24</td><td class="num">↑ 1 204 m</td><td class="num">↓ 1 209 m</td><td class="num">3 457 kcal</td><td class="num">4 452 ml</td><td class="num">19,0 km/h</td></tr>
+          <tr><td class="stage-no">18. 8. 2026</td><td class="route">Bregenz → Tannheim</td><td class="num">108,59 km</td><td class="num">6:25:21</td><td class="num">↑ 2 338 m</td><td class="num">↓ 2 001 m</td><td class="num">2 818 kcal</td><td class="num">3 375 ml</td><td class="num">16,9 km/h</td></tr>
+          <tr><td class="stage-no">19. 8. 2026</td><td class="route">Tannheim → Lermoos</td><td class="num">84,00 km</td><td class="num">5:12:42</td><td class="num">↑ 1 501 m</td><td class="num">↓ 1 567 m</td><td class="num">2 325 kcal</td><td class="num">3 581 ml</td><td class="num">16,1 km/h</td></tr>
+          <tr><td class="stage-no">20. 8. 2026</td><td class="route">Lermoos → Chiemsee</td><td class="num">176,33 km</td><td class="num">8:06:32</td><td class="num">↑ 1 889 m</td><td class="num">↓ 2 776 m</td><td class="num">3 275 kcal</td><td class="num">4 277 ml</td><td class="num">21,7 km/h</td></tr>
+          <tr><td class="stage-no">21. 8. 2026</td><td class="route">Chiemsee → Linec</td><td class="num">192,88 km</td><td class="num">8:39:01</td><td class="num">↑ 1 908 m</td><td class="num">↓ 2 184 m</td><td class="num">3 292 kcal</td><td class="num">4 825 ml</td><td class="num">22,3 km/h</td></tr>
           <tr class="total">
             <td></td>
             <td>Celkem</td>
-            <td>— km</td>
-            <td>+— m</td>
-            <td>—</td>
+            <td>1 475,4 km</td>
+            <td>69:51:02</td>
+            <td>↑ 14 444 m</td>
+            <td>↓ 15 132 m</td>
+            <td>28 787 kcal</td>
+            <td>45 674 ml</td>
+            <td>21,1 km/h</td>
           </tr>
         </tbody>
       </table>
