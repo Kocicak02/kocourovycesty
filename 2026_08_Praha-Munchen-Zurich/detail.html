@@ -234,19 +234,36 @@ tr.total td{
 
 .video-grid{
   display:grid;
-  grid-template-columns:repeat(2,1fr);
+  grid-template-columns:repeat(3,1fr);
   gap:12px;
 }
 
 .video-card{
+  display:flex;
+  min-height:150px;
   background:var(--card);
+  border:1px solid var(--line);
+  padding:18px;
+  flex-direction:column;
+  justify-content:space-between;
+  transition:transform .15s ease,border-color .15s ease;
 }
 
-.video-card video{
-  display:block;
-  width:100%;
-  max-height:420px;
-  background:#000;
+.video-card:hover{
+  transform:translateY(-2px);
+  border-color:#aaa49a;
+}
+
+.video-icon{
+  font-size:28px;
+  line-height:1;
+}
+
+.video-open{
+  margin-top:18px;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
 }
 
 .caption{
@@ -302,12 +319,13 @@ footer{
   .stats{grid-template-columns:repeat(2,1fr)}
   .media-tiles{grid-template-columns:1fr}
   .gallery{grid-template-columns:repeat(2,1fr)}
-  .video-grid{grid-template-columns:1fr}
+  .video-grid{grid-template-columns:repeat(2,1fr)}
   .map-wrap iframe{height:560px}
 }
 
 @media(max-width:560px){
   .gallery{grid-template-columns:1fr}
+  .video-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -515,21 +533,27 @@ function buildVideos(){
   videos.forEach(name => {
     const url = VIDEO_BASE + encodeURIComponent(name);
 
-    const card = document.createElement("div");
+    const card = document.createElement("a");
     card.className = "video-card";
+    card.href = url;
+    card.target = "_blank";
+    card.rel = "noopener";
 
-    const video = document.createElement("video");
-    video.controls = true;
-    video.preload = "metadata";
-    video.playsInline = true;
-    video.src = url;
+    const icon = document.createElement("div");
+    icon.className = "video-icon";
+    icon.textContent = "▶";
 
     const caption = document.createElement("div");
     caption.className = "caption";
     caption.textContent = name;
 
-    card.appendChild(video);
+    const open = document.createElement("div");
+    open.className = "video-open";
+    open.textContent = "Otevřít video →";
+
+    card.appendChild(icon);
     card.appendChild(caption);
+    card.appendChild(open);
 
     gallery.appendChild(card);
   });
