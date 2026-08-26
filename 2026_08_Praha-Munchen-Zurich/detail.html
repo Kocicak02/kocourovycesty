@@ -6,22 +6,46 @@
 <title>Praha – Mnichov – Curych — Kocourovy cesty</title>
 <style>
 :root{--bg:#f5f3ee;--text:#111;--muted:#777;--line:#d9d5cc;--card:#ebe7df}
-*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}a{color:inherit;text-decoration:none}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+a{color:inherit;text-decoration:none}
 header{display:flex;justify-content:space-between;align-items:center;padding:28px 42px;border-bottom:1px solid var(--line)}
-.brand{font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}nav{font-size:13px;text-transform:uppercase;letter-spacing:.08em}
+.brand{font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+nav{font-size:13px;text-transform:uppercase;letter-spacing:.08em}
 main{max-width:1400px;margin:auto;padding:42px}
 .hero{display:flex;justify-content:space-between;align-items:end;gap:30px;padding-bottom:28px;border-bottom:1px solid var(--line)}
-.hero h1{margin:0;font-size:42px;line-height:1.03}.hero .date{font-size:13px;color:var(--muted);letter-spacing:.1em;white-space:nowrap}
+.hero h1{margin:0;font-size:42px;line-height:1.03}
+.hero .date{font-size:13px;color:var(--muted);letter-spacing:.1em;white-space:nowrap}
 .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:28px}
-.stat{background:var(--bg);padding:22px 18px}.stat-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px}.stat-value{font-size:24px;font-weight:700}
-.section{margin-top:52px}.section h2{margin:0 0 18px;font-size:14px;text-transform:uppercase;letter-spacing:.12em}
-.table-wrap{overflow-x:auto;border-top:1px solid var(--line)}table{width:100%;border-collapse:collapse;min-width:760px}
-th,td{padding:17px 14px;border-bottom:1px solid var(--line);text-align:left}th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;font-weight:400}
-td{font-size:14px}td.stage-no{width:60px;color:var(--muted);font-size:12px}td.route{font-size:17px;font-weight:700}td.num{white-space:nowrap}tr.total td{font-weight:700;border-top:2px solid var(--text)}
-.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.gallery-placeholder{min-height:180px;background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
-.map-wrap{border:1px solid var(--line);overflow:hidden;background:var(--card)}.map-wrap iframe{display:block;width:100%;height:720px;border:0}
+.stat{background:var(--bg);padding:22px 18px}
+.stat-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px}
+.stat-value{font-size:24px;font-weight:700}
+.section{margin-top:52px}
+.section h2{margin:0 0 18px;font-size:14px;text-transform:uppercase;letter-spacing:.12em}
+.table-wrap{overflow-x:auto;border-top:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th,td{padding:17px 14px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;font-weight:400}
+td.stage-no{width:60px;color:var(--muted);font-size:12px}
+td.route{font-size:17px;font-weight:700}
+td.num{white-space:nowrap}
+tr.total td{font-weight:700;border-top:2px solid var(--text)}
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.gallery a{display:block;background:var(--card);overflow:hidden}
+.gallery img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.video-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.video-item{background:var(--card)}
+.video-item video{display:block;width:100%;max-height:420px;background:#000}
+.caption{padding:8px 10px;font-size:11px;color:var(--muted);word-break:break-word}
+.media-count{margin-top:10px;font-size:12px;color:var(--muted)}
+.empty{min-height:180px;background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.map-wrap{border:1px solid var(--line);overflow:hidden;background:var(--card)}
+.map-wrap iframe{display:block;width:100%;height:720px;border:0}
 footer{max-width:1400px;margin:auto;padding:34px 42px 50px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
-@media(max-width:900px){header{padding:20px}main{padding:24px 20px}.hero{flex-direction:column;align-items:flex-start}.hero h1{font-size:32px}.stats{grid-template-columns:repeat(2,1fr)}.map-wrap iframe{height:560px}}
+@media(max-width:900px){
+header{padding:20px}main{padding:24px 20px}.hero{flex-direction:column;align-items:flex-start}.hero h1{font-size:32px}
+.stats{grid-template-columns:repeat(2,1fr)}.gallery{grid-template-columns:repeat(2,1fr)}.video-grid{grid-template-columns:1fr}.map-wrap iframe{height:560px}}
+@media(max-width:560px){.gallery{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -35,25 +59,46 @@ footer{max-width:1400px;margin:auto;padding:34px 42px 50px;color:var(--muted);fo
 <div class="stat"><div class="stat-label">Etapy</div><div class="stat-value">11</div></div>
 <div class="stat"><div class="stat-label">Průměr / den</div><div class="stat-value">— km</div></div>
 </section>
-<section class="section"><h2>Etapy</h2><div class="table-wrap"><table>
-<thead><tr><th>Den</th><th>Etapa</th><th>Vzdálenost</th><th>Převýšení</th><th>Čas</th></tr></thead><tbody>
-<tr><td class="stage-no">01</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-<tr><td class="stage-no">02</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-<tr><td class="stage-no">03</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-<tr><td class="stage-no">04</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-<tr><td class="stage-no">05</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-<tr><td class="stage-no">06</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-<tr><td class="stage-no">07</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-<tr><td class="stage-no">08</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-<tr><td class="stage-no">09</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-<tr><td class="stage-no">10</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
-<tr><td class="stage-no">11</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
 
+<section class="section"><h2>Etapy</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Den</th><th>Etapa</th><th>Vzdálenost</th><th>Převýšení</th><th>Čas</th></tr></thead>
+<tbody>
+<tr><td class="stage-no">01</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr><tr><td class="stage-no">02</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr><tr><td class="stage-no">03</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr><tr><td class="stage-no">04</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr><tr><td class="stage-no">05</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr><tr><td class="stage-no">06</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr><tr><td class="stage-no">07</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr><tr><td class="stage-no">08</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr><tr><td class="stage-no">09</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr><tr><td class="stage-no">10</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr><tr><td class="stage-no">11</td><td class="route">—</td><td class="num">— km</td><td class="num">+— m</td><td class="num">—</td></tr>
 <tr class="total"><td></td><td>Celkem</td><td>— km</td><td>+— m</td><td>—</td></tr>
 </tbody></table></div></section>
-<section class="section"><h2>Fotky</h2><div class="gallery"><div class="gallery-placeholder">Fotky doplníme</div></div></section>
-<section class="section"><h2>Mapa</h2><div class="map-wrap"><iframe src="mapa.html" loading="lazy" title="Mapa Praha – Mnichov – Curych"></iframe></div></section>
+
+<section class="section"><h2>Fotky</h2><div id="photoGallery" class="gallery"></div><div id="photoCount" class="media-count"></div></section>
+<section class="section"><h2>Videa</h2><div id="videoGallery" class="video-grid"></div><div id="videoCount" class="media-count"></div></section>
+<section class="section"><h2>Mapa</h2><div class="map-wrap"><iframe src="mapa.html" loading="lazy"></iframe></div></section>
 </main>
 <footer>Kocourovy cesty</footer>
+
+<script src="media.js"></script>
+<script>
+const PHOTO_BASE="https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/FOTO/";
+const VIDEO_BASE="https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/VIDEO/";
+
+function addPhoto(name){
+ const url=PHOTO_BASE+encodeURIComponent(name);
+ const a=document.createElement("a"); a.href=url; a.target="_blank"; a.rel="noopener";
+ const img=document.createElement("img"); img.src=url; img.loading="lazy"; img.alt="";
+ const cap=document.createElement("div"); cap.className="caption"; cap.textContent=name;
+ a.append(img,cap); document.getElementById("photoGallery").appendChild(a);
+}
+function addVideo(name){
+ const url=VIDEO_BASE+encodeURIComponent(name);
+ const w=document.createElement("div"); w.className="video-item";
+ const v=document.createElement("video"); v.controls=true; v.preload="metadata"; v.playsInline=true; v.src=url;
+ const cap=document.createElement("div"); cap.className="caption"; cap.textContent=name;
+ w.append(v,cap); document.getElementById("videoGallery").appendChild(w);
+}
+const photos=Array.isArray(window.MEDIA_PHOTOS)?window.MEDIA_PHOTOS:[];
+const videos=Array.isArray(window.MEDIA_VIDEOS)?window.MEDIA_VIDEOS:[];
+if(photos.length){photos.forEach(addPhoto);document.getElementById("photoCount").textContent=`Celkem ${photos.length} fotek`;}
+else{document.getElementById("photoGallery").innerHTML='<div class="empty">Žádné fotky v media.js</div>';}
+if(videos.length){videos.forEach(addVideo);document.getElementById("videoCount").textContent=`Celkem ${videos.length} videí`;}
+else{document.getElementById("videoGallery").innerHTML='<div class="empty">Žádná videa v media.js</div>';}
+</script>
 </body>
 </html>
