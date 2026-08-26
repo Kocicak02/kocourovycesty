@@ -16,7 +16,7 @@ jobs:
       - name: Stahnout repozitar
         uses: actions/checkout@v4
 
-      - name: Aktualizovat media a karty
+      - name: Aktualizovat media a hlavni stranku
         env:
           BUNNY_STORAGE_KEY: ${{ secrets.BUNNY_STORAGE_KEY }}
           BUNNY_STORAGE_ZONE: ${{ secrets.BUNNY_STORAGE_ZONE }}
@@ -41,12 +41,11 @@ jobs:
           }
 
 
-          # ==========================================
+          # ==================================================
           # BUNNY
-          # ==========================================
+          # ==================================================
 
           def bunny_request(path=""):
-
               url = f"https://storage.bunnycdn.com/{zone}/"
 
               if path:
@@ -65,13 +64,11 @@ jobs:
 
 
           def root_folders():
-
               data = bunny_request()
 
               folders = []
 
               for item in data:
-
                   if not item.get("IsDirectory"):
                       continue
 
@@ -80,19 +77,16 @@ jobs:
                   if name:
                       folders.append(name)
 
-              return folders
+              return sorted(folders, key=str.lower)
 
 
           def media_files(activity, folder):
-
               try:
-
                   data = bunny_request(
                       f"{activity}/{folder}"
                   )
 
               except urllib.error.HTTPError as error:
-
                   if error.code == 404:
                       return []
 
@@ -101,7 +95,6 @@ jobs:
               files = []
 
               for item in data:
-
                   if item.get("IsDirectory"):
                       continue
 
@@ -110,15 +103,12 @@ jobs:
                   if name:
                       files.append(name)
 
-              return sorted(
-                  files,
-                  key=str.lower
-              )
+              return sorted(files, key=str.lower)
 
 
-          # ==========================================
-          # MEDIA.JS
-          # ==========================================
+          # ==================================================
+          # MEDIA.JS PRO VSECHNY AKTIVITY
+          # ==================================================
 
           for bunny_activity in root_folders():
 
@@ -129,8 +119,11 @@ jobs:
 
               folder = Path(github_activity)
 
-              # Aktivita jeste neni na GitHubu
               if not folder.is_dir():
+                  print(
+                      f"Preskakuji {bunny_activity}: "
+                      f"GitHub slozka neexistuje."
+                  )
                   continue
 
               photos = media_files(
@@ -172,17 +165,15 @@ jobs:
               )
 
               print(
-                  github_activity,
-                  len(photos),
-                  "fotek,",
-                  len(videos),
-                  "videi"
+                  f"{github_activity}: "
+                  f"{len(photos)} fotek, "
+                  f"{len(videos)} videi"
               )
 
 
-          # ==========================================
+          # ==================================================
           # CARD.JSON
-          # ==========================================
+          # ==================================================
 
           cards = []
 
@@ -190,8 +181,11 @@ jobs:
 
               folder = card_path.parent
 
-              # Bez detail.html aktivitu nezobrazime
               if not (folder / "detail.html").exists():
+                  print(
+                      f"Preskakuji kartu {folder}: "
+                      f"chybi detail.html"
+                  )
                   continue
 
               data = json.loads(
@@ -216,37 +210,32 @@ jobs:
                   "type": str(
                       data.get("type", "")
                   ).strip(),
-                  "summary": str(
-                      data.get("summary", "")
-                  ).strip(),
                   "image": str(
                       data.get("image", "")
-                  ).strip(),
-                  "sort": str(
-                      data.get("sort", "")
                   ).strip()
               })
 
 
+          # Automaticke razeni podle nazvu slozky:
+          # 2026_08_... bude pred 2026_06_...
           cards.sort(
-              key=lambda x: x["sort"],
+              key=lambda card: card["folder"],
               reverse=True
           )
 
 
-          # ==========================================
-          # HTML KARTY
-          # ==========================================
+          # ==================================================
+          # KARTY
+          # ==================================================
 
-          card_html = []
+          cards_html = []
 
           for card in cards:
 
-              image = ""
+              image_html = ""
 
               if card["image"]:
-
-                  image = (
+                  image_html = (
                       '<img class="card-image" src="'
                       + escape(card["image"])
                       + '" alt="">'
@@ -255,29 +244,18 @@ jobs:
               type_html = ""
 
               if card["type"]:
-
                   type_html = (
                       '<div class="card-type">'
                       + escape(card["type"])
                       + '</div>'
                   )
 
-              summary = ""
-
-              if card["summary"]:
-
-                  summary = (
-                      '<div class="card-summary">'
-                      + escape(card["summary"])
-                      + '</div>'
-                  )
-
-              card_html.append(
+              cards_html.append(
                   f'''
                   <a class="card"
                      href="/{escape(card["folder"])}/detail.html">
 
-                    {image}
+                    {image_html}
 
                     <div class="card-content">
 
@@ -287,9 +265,8 @@ jobs:
                         {escape(card["title"])}
                       </div>
 
-                      {summary}
-
                       <div class="card-bottom">
+
                         <span>
                           {escape(card["date"])}
                         </span>
@@ -297,6 +274,7 @@ jobs:
                         <span>
                           Otevrit →
                         </span>
+
                       </div>
 
                     </div>
@@ -306,26 +284,19 @@ jobs:
               )
 
 
-          cards_output = "\n".join(
-              card_html
-          )
+          cards_output = "\n".join(cards_html)
 
 
-          # ==========================================
+          # ==================================================
           # INDEX.HTML
-          # ==========================================
+          # ==================================================
 
-          index = """<!doctype html>
+          index_html = """<!doctype html>
           <html lang="cs">
-
           <head>
 
           <meta charset="utf-8">
-
-          <meta
-            name="viewport"
-            content="width=device-width,initial-scale=1"
-          >
+          <meta name="viewport" content="width=device-width,initial-scale=1">
 
           <title>Kocourovy cesty</title>
 
@@ -448,12 +419,6 @@ jobs:
             line-height:1.08;
           }
 
-          .card-summary{
-            margin-top:9px;
-            font-size:13px;
-            color:var(--muted);
-          }
-
           .card-bottom{
             margin-top:auto;
             padding-top:24px;
@@ -493,7 +458,6 @@ jobs:
           }
 
           </style>
-
           </head>
 
           <body>
@@ -527,9 +491,7 @@ jobs:
             </div>
 
             <div class="grid">
-
               __CARDS__
-
             </div>
 
           </main>
@@ -539,29 +501,29 @@ jobs:
           </footer>
 
           </body>
-
           </html>
           """
 
-          index = index.replace(
-              "__CARDS__",
-              cards_output
-          )
 
-          index = index.replace(
+          index_html = index_html.replace(
               "__COUNT__",
               str(len(cards))
           )
 
+          index_html = index_html.replace(
+              "__CARDS__",
+              cards_output
+          )
+
+
           Path("index.html").write_text(
-              index,
+              index_html,
               encoding="utf-8"
           )
 
           print(
-              "Homepage:",
-              len(cards),
-              "karet"
+              f"Homepage vygenerovana: "
+              f"{len(cards)} karet"
           )
 
           PY
@@ -569,27 +531,16 @@ jobs:
 
       - name: Ulozit zmeny
         run: |
-
-          git config user.name \
-            "github-actions[bot]"
-
-          git config user.email \
-            "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add index.html
-
           git add -- '*/media.js'
 
-          if git diff --cached --quiet
-          then
-
+          if git diff --cached --quiet; then
             echo "Web je aktualni."
-
             exit 0
-
           fi
 
-          git commit \
-            -m "Automaticka aktualizace webu"
-
+          git commit -m "Automaticka aktualizace webu"
           git push
