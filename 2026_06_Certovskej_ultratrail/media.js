@@ -1,4 +1,4 @@
-// Tento soubor se generuje automaticky z Bunny Storage.
+// Automaticky generovano z Bunny Storage.
 // Neupravovat rucne.
 
 window.MEDIA_PHOTOS = [
