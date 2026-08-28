@@ -1,65 +1,241 @@
 <!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
-        <meta name="mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <link rel="stylesheet" href="./resources/ol.css">
-        <link rel="stylesheet" href="resources/fontawesome-all.min.css">
-        <link href="resources/photon-geocoder-autocomplete.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="./resources/ol-layerswitcher.css">
-        <link rel="stylesheet" href="./resources/qgis2web.css">
-        <style>
-        html, body {
-            background-color: #ffffff;
-        }
-        .ol-control > * {
-            background-color: #f8f8f8!important;
-            color: #444444!important;
-            border-radius: 0px;
-        }
-        .ol-attribution a, .gcd-gl-input::placeholder, .search-layer-input-search::placeholder {
-            color: #444444!important;
-        }
-        .search-layer-input-search {
-            background-color: #f8f8f8!important;
-        }
-        .ol-control > *:focus, .ol-control >*:hover {
-            background-color: rgba(248, 248, 248, 0.7)!important;
-        } 
-        .ol-control {
-            background-color: rgba(255,255,255,.4) !important;
-            padding: 2px !important;
-        } 
-        </style>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mapa — Dolomity 2026</title>
 
-        <style>
-        #map {
-            width: 1620px;
-            height: 404px;
-        }
-        </style>
-        <title></title>
-    </head>
-    <body>
-        <div id="map">
-            <div id="popup" class="ol-popup">
-                <a href="#" id="popup-closer" class="ol-popup-closer"></a>
-                <div id="popup-content"></div>
-            </div>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+html,body,#map{
+  width:100%;
+  height:100%;
+  margin:0;
+}
+html,body{
+  overflow:hidden;
+  font-family:Arial,Helvetica,sans-serif;
+}
+#map{
+  position:absolute;
+  inset:0;
+}
+.leaflet-popup-content{
+  margin:12px 14px;
+  min-width:220px;
+}
+.media-popup img{
+  display:block;
+  width:100%;
+  max-width:520px;
+  height:auto;
+  border-radius:3px;
+}
+.media-popup video{
+  display:block;
+  width:100%;
+  max-width:520px;
+  height:auto;
+}
+.media-name{
+  margin-top:7px;
+  font-size:12px;
+  color:#555;
+  word-break:break-word;
+}
+</style>
+</head>
+
+<body>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- QGIS export data -->
+<script src="data/track_1.js"></script>
+<script src="data/Fotky_2.js"></script>
+<script src="data/Fotky_podle_casu_3.js"></script>
+<script src="data/Videa_4.js"></script>
+
+<script>
+const PHOTO_BASE =
+  "https://cesty.b-cdn.net/2026_07_Dolomity/FOTO/";
+
+const VIDEO_BASE =
+  "https://cesty.b-cdn.net/2026_07_Dolomity/VIDEO/";
+
+const map = L.map("map", {
+  zoomControl: true
+});
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution: "&copy; OpenStreetMap contributors"
+}).addTo(map);
+
+const allBounds = L.latLngBounds();
+
+function esc(value){
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;");
+}
+
+function filenameFromProperties(props){
+  if(!props) return "";
+
+  if(props.filename) return String(props.filename);
+
+  const raw =
+    props.path ||
+    props.photo ||
+    props.video ||
+    props.bunny_file ||
+    "";
+
+  if(!raw) return "";
+
+  return String(raw).split(/[\\/]/).pop();
+}
+
+function photoUrl(props){
+  if(props?.photo_url) return props.photo_url;
+
+  const file = filenameFromProperties(props);
+  if(!file) return "";
+
+  return PHOTO_BASE + encodeURIComponent(file);
+}
+
+function videoUrl(props){
+  if(props?.video_url) return props.video_url;
+
+  const file = filenameFromProperties(props);
+  if(!file) return "";
+
+  return VIDEO_BASE + encodeURIComponent(file);
+}
+
+function addTrack(data){
+  if(!data) return;
+
+  const layer = L.geoJSON(data, {
+    style:{
+      color:"#111",
+      weight:4,
+      opacity:.9
+    }
+  }).addTo(map);
+
+  try{
+    const b = layer.getBounds();
+    if(b.isValid()) allBounds.extend(b);
+  }catch(e){}
+}
+
+function addPhotoLayer(data){
+  if(!data) return;
+
+  const layer = L.geoJSON(data, {
+    pointToLayer:(feature,latlng)=>
+      L.circleMarker(latlng,{
+        radius:6,
+        color:"#fff",
+        weight:1.5,
+        fillColor:"#111",
+        fillOpacity:1
+      }),
+
+    onEachFeature:(feature,layer)=>{
+      const p = feature.properties || {};
+      const url = photoUrl(p);
+      const name = filenameFromProperties(p);
+
+      if(!url) return;
+
+      layer.bindPopup(`
+        <div class="media-popup">
+          <a href="${url}" target="_blank" rel="noopener">
+            <img src="${url}" alt="${esc(name)}">
+          </a>
+          <div class="media-name">${esc(name)}</div>
         </div>
-        <script src="resources/qgis2web_expressions.js"></script>
-        <script src="./resources/functions.js"></script>
-        <script src="./resources/ol.js"></script>
-        <script src="./resources/ol-layerswitcher.js"></script>
-        <script src="resources/photon-geocoder-autocomplete.min.js"></script>
-        <script src="resources/olms.js"></script>
-        <script src="layers/track_1.js"></script><script src="layers/Fotky_2.js"></script><script src="layers/Fotky_podle_casu_3.js"></script><script src="layers/Videa_4.js"></script>
-        <script src="styles/track_1_style.js"></script><script src="styles/Fotky_2_style.js"></script><script src="styles/Fotky_podle_casu_3_style.js"></script><script src="styles/Videa_4_style.js"></script>
-        <script src="./layers/layers.js" type="text/javascript"></script> 
-        <script src="./resources/Autolinker.min.js"></script>
-        <script src="./resources/qgis2web.js"></script>
-    </body>
+      `,{maxWidth:560});
+    }
+  }).addTo(map);
+
+  try{
+    const b = layer.getBounds();
+    if(b.isValid()) allBounds.extend(b);
+  }catch(e){}
+}
+
+function addVideoLayer(data){
+  if(!data) return;
+
+  const layer = L.geoJSON(data, {
+    pointToLayer:(feature,latlng)=>
+      L.circleMarker(latlng,{
+        radius:7,
+        color:"#fff",
+        weight:1.5,
+        fillColor:"#111",
+        fillOpacity:1
+      }),
+
+    onEachFeature:(feature,layer)=>{
+      const p = feature.properties || {};
+      const url = videoUrl(p);
+      const name = filenameFromProperties(p);
+
+      if(!url) return;
+
+      layer.bindPopup(`
+        <div class="media-popup">
+          <video controls preload="none">
+            <source src="${url}" type="video/mp4">
+          </video>
+          <div class="media-name">${esc(name)}</div>
+        </div>
+      `,{maxWidth:560});
+    }
+  }).addTo(map);
+
+  try{
+    const b = layer.getBounds();
+    if(b.isValid()) allBounds.extend(b);
+  }catch(e){}
+}
+
+/* TRASA */
+if(typeof json_track_1 !== "undefined"){
+  addTrack(json_track_1);
+}
+
+/* FOTKY S VLASTNÍ GPS */
+if(typeof json_Fotky_2 !== "undefined"){
+  addPhotoLayer(json_Fotky_2);
+}
+
+/* FOTKY PODLE ČASU */
+if(typeof json_Fotky_podle_casu_3 !== "undefined"){
+  addPhotoLayer(json_Fotky_podle_casu_3);
+}
+
+/* VIDEA */
+if(typeof json_Videa_4 !== "undefined"){
+  addVideoLayer(json_Videa_4);
+}
+
+if(allBounds.isValid()){
+  map.fitBounds(allBounds,{padding:[25,25]});
+}else{
+  map.setView([46.55,11.85],10);
+}
+</script>
+
+</body>
 </html>
