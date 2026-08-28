@@ -1,50 +1,694 @@
+
+
 <!doctype html>
 <html lang="cs">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Lyžování — Kocourovy cesty</title>
+
 <style>
-:root{--bg:#f5f3ee;--text:#111;--muted:#777;--line:#d9d5cc;--card:#ebe7df}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
-.page{width:min(1180px,calc(100% - 40px));margin:auto;padding:26px 0 70px}
-header{display:flex;justify-content:space-between;padding-bottom:22px;border-bottom:1px solid var(--line)}a{color:inherit;text-decoration:none}
-.brand{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.archive{font-size:13px}
-.hero{padding:48px 0 34px}h1{margin:0 0 10px;font-size:clamp(34px,6vw,72px);line-height:.95;letter-spacing:-.04em}
-.meta{color:var(--muted);font-size:14px;text-transform:uppercase;letter-spacing:.05em}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line);margin:8px 0 42px}
-.stat{padding:18px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-height:92px}
-.v{font-size:25px;font-weight:700;margin-bottom:7px}.l{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
-section{margin-top:42px}h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;margin:0 0 14px}
-table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:13px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{font-size:10px;text-transform:uppercase;color:var(--muted)}
-.map-frame{display:block;width:100%;height:620px;border:1px solid var(--line);background:#fff}
-.media-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.media-box{border:1px solid var(--line)}.media-button{width:100%;padding:18px;border:0;background:none;display:flex;justify-content:space-between;cursor:pointer}.media-content{display:none;padding:0 14px 14px}.media-box.open .media-content{display:block}.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.photo-grid img{width:100%;height:220px;object-fit:cover}video{width:100%;max-height:520px}.empty{color:var(--muted);font-size:13px}
-@media(max-width:800px){.page{width:calc(100% - 24px)}.stats{grid-template-columns:repeat(2,1fr)}.table-wrap{overflow-x:auto}.media-grid{grid-template-columns:1fr}.photo-grid{grid-template-columns:repeat(2,1fr)}.map-frame{height:500px}}
+:root{
+  --bg:#f5f3ee;
+  --text:#111;
+  --muted:#777;
+  --line:#d9d5cc;
+  --card:#ebe7df;
+}
+
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+}
+
+a{
+  color:inherit;
+  text-decoration:none;
+}
+
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:28px 42px;
+  border-bottom:1px solid var(--line);
+}
+
+.brand{
+  font-size:18px;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+
+nav{
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+main{
+  max-width:1400px;
+  margin:auto;
+  padding:42px;
+}
+
+.hero{
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  gap:30px;
+  padding-bottom:28px;
+  border-bottom:1px solid var(--line);
+}
+
+.hero h1{
+  margin:0;
+  font-size:42px;
+  line-height:1.03;
+}
+
+.hero .date{
+  font-size:13px;
+  color:var(--muted);
+  letter-spacing:.1em;
+  white-space:nowrap;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:1px;
+  background:var(--line);
+  border:1px solid var(--line);
+  margin-top:28px;
+}
+
+.stat{
+  background:var(--bg);
+  padding:22px 18px;
+}
+
+.stat-label{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  color:var(--muted);
+  margin-bottom:8px;
+}
+
+.stat-value{
+  font-size:24px;
+  font-weight:700;
+}
+
+.section{
+  margin-top:52px;
+}
+
+.section h2{
+  margin:0 0 18px;
+  font-size:14px;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+}
+
+.table-wrap{
+  overflow-x:auto;
+  border-top:1px solid var(--line);
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:1180px;
+}
+
+th,td{
+  padding:17px 14px;
+  border-bottom:1px solid var(--line);
+  text-align:left;
+}
+
+th{
+  font-size:10px;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.09em;
+  font-weight:400;
+}
+
+td{
+  font-size:14px;
+}
+
+td.route{
+  font-size:17px;
+  font-weight:700;
+}
+
+td.num{
+  white-space:nowrap;
+}
+
+tr.total td{
+  font-weight:700;
+  border-top:2px solid var(--text);
+}
+
+/* MEDIA */
+.media-tiles{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+
+.media-tile{
+  border:1px solid var(--line);
+  background:var(--card);
+  min-height:180px;
+  padding:22px;
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  transition:transform .15s ease,border-color .15s ease;
+  user-select:none;
+}
+
+.media-tile:hover{
+  transform:translateY(-2px);
+  border-color:#aaa49a;
+}
+
+.media-tile-title{
+  font-size:24px;
+  font-weight:700;
+}
+
+.media-tile-meta{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.media-tile-action{
+  margin-top:12px;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.media-panel{
+  display:none;
+  margin-top:16px;
+}
+
+.media-panel.open{
+  display:block;
+}
+
+.gallery{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+
+.photo-card{
+  display:block;
+  background:var(--card);
+  overflow:hidden;
+}
+
+.photo-card img{
+  width:100%;
+  aspect-ratio:4/3;
+  object-fit:cover;
+  display:block;
+}
+
+.video-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+
+.video-card{
+  display:flex;
+  min-height:150px;
+  background:var(--card);
+  border:1px solid var(--line);
+  padding:18px;
+  flex-direction:column;
+  justify-content:space-between;
+  transition:transform .15s ease,border-color .15s ease;
+}
+
+.video-card:hover{
+  transform:translateY(-2px);
+  border-color:#aaa49a;
+}
+
+.video-icon{
+  font-size:28px;
+  line-height:1;
+}
+
+.video-open{
+  margin-top:18px;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.caption{
+  padding:8px 10px;
+  font-size:11px;
+  color:var(--muted);
+  word-break:break-word;
+}
+
+.empty{
+  min-height:180px;
+  background:var(--card);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--muted);
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.map-frame{
+  width:100%;
+  height:620px;
+  border:1px solid var(--line);
+  display:block;
+  background:var(--card);
+}
+
+footer{
+  max-width:1400px;
+  margin:auto;
+  padding:34px 42px 50px;
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+@media(max-width:900px){
+  header{padding:20px}
+  main{padding:24px 20px}
+  .hero{flex-direction:column;align-items:flex-start}
+  .hero h1{font-size:32px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .media-tiles{grid-template-columns:1fr}
+  .gallery{grid-template-columns:repeat(2,1fr)}
+  .video-grid{grid-template-columns:repeat(2,1fr)}
+  .map-frame{height:520px}
+}
+
+@media(max-width:560px){
+  .gallery,.video-grid{grid-template-columns:1fr}
+  .map-frame{height:440px}
+}
 </style>
-</head><body><div class="page">
-<header><a class="brand" href="/">Kocourovy cesty</a><a class="archive" href="/archiv.html">Archiv</a></header>
-<div class="hero"><h1>Lyžování</h1><div class="meta">19.–21. 12. 2025 · sjezdové lyžování</div></div>
-<div class="stats">
-<div class="stat"><div class="v">223.40 km</div><div class="l">Vzdálenost</div></div>
-<div class="stat"><div class="v">18:47:17</div><div class="l">Čas aktivity</div></div>
-<div class="stat"><div class="v">↑ 25311 m</div><div class="l">Nahoru</div></div>
-<div class="stat"><div class="v">↓ 24626 m</div><div class="l">Dolů</div></div>
-<div class="stat"><div class="v">7 036 kcal</div><div class="l">Kalorie</div></div>
-<div class="stat"><div class="v">11.74 l</div><div class="l">Pocení</div></div>
-<div class="stat"><div class="v">3</div><div class="l">Aktivity</div></div>
-</div>
-<section><h2>Jednotlivé aktivity</h2><div class="table-wrap"><table><thead><tr><th>Datum</th><th>Vzdálenost</th><th>Čas aktivity</th><th>Nahoru</th><th>Dolů</th><th>Kalorie</th><th>Pocení</th><th>Ø tep</th><th>Max. rychlost</th></tr></thead><tbody><tr><td>19. 12. 2025</td><td>57.72 km</td><td>5:57:05</td><td>↑ 5705 m</td><td>↓ 5895 m</td><td>2 144 kcal</td><td>3.71 l</td><td>119 bpm</td><td>85,3 km/h</td></tr>
-<tr><td>20. 12. 2025</td><td>79.27 km</td><td>5:55:05</td><td>↑ 9833 m</td><td>↓ 8970 m</td><td>2 305 kcal</td><td>3.80 l</td><td>121 bpm</td><td>90,8 km/h</td></tr>
-<tr><td>21. 12. 2025</td><td>86.40 km</td><td>6:55:07</td><td>↑ 9773 m</td><td>↓ 9761 m</td><td>2 587 kcal</td><td>4.23 l</td><td>119 bpm</td><td>79,1 km/h</td></tr></tbody></table></div></section>
-<section><h2>Média</h2><div class="media-grid">
-<div class="media-box" id="pb"><button class="media-button" onclick="toggle('pb','photos')"><strong>Fotky</strong><span id="pc">0</span></button><div class="media-content"><div class="photo-grid" id="photos"></div></div></div>
-<div class="media-box" id="vb"><button class="media-button" onclick="toggle('vb','videos')"><strong>Videa</strong><span id="vc">0</span></button><div class="media-content"><div id="videos"></div></div></div>
-</div></section>
-<section><h2>Mapa</h2><iframe class="map-frame" src="mapa.html" loading="lazy" title="Mapa lyžování"></iframe></section></div>
-<script src="media.js"></script><script>
-const BUNNY_FOLDER="2025_12_Dolomity";
-const PB="https://cesty.b-cdn.net/"+BUNNY_FOLDER+"/FOTO/", VB="https://cesty.b-cdn.net/"+BUNNY_FOLDER+"/VIDEO/";
-const P=Array.isArray(window.MEDIA_PHOTOS)?window.MEDIA_PHOTOS:[],V=Array.isArray(window.MEDIA_VIDEOS)?window.MEDIA_VIDEOS:[];
-pc.textContent=P.length;vc.textContent=V.length;let loaded={};
-function toggle(box,id){document.getElementById(box).classList.toggle("open");if(!loaded[id]){load(id);loaded[id]=1}}
-function load(id){let e=document.getElementById(id),a=id==="photos"?P:V,b=id==="photos"?PB:VB;if(!a.length){e.innerHTML='<div class="empty">Žádná média.</div>';return}a.forEach(f=>{if(id==="photos"){let x=new Image();x.loading="lazy";x.src=b+encodeURIComponent(f);e.appendChild(x)}else{let x=document.createElement("video");x.controls=true;x.preload="none";x.src=b+encodeURIComponent(f);e.appendChild(x)}})}
-</script></body></html>
+</head>
+
+<body>
+
+<header>
+  <a class="brand" href="/">Kocourovy cesty</a>
+  <nav>
+    <a href="/archiv.html">Archiv</a>
+  </nav>
+</header>
+
+<main>
+
+  <section class="hero">
+    <h1>Lyžování</h1>
+    <div class="date">12 / 2025</div>
+  </section>
+
+  <section class="stats">
+
+    <div class="stat">
+      <div class="stat-label">Celkem</div>
+      <div class="stat-value">223,40 km</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">Čas aktivity</div>
+      <div class="stat-value">18:47:17</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">Nastoupáno</div>
+      <div class="stat-value">25 311 m</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">Kalorie</div>
+      <div class="stat-value">7 036 kcal</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-label">Aktivity</div>
+      <div class="stat-value">3</div>
+    </div>
+
+  </section>
+
+  <section class="section">
+    <h2>Lyžování</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Vzdálenost</th>
+            <th>Čas aktivity</th>
+            <th>↑ Nahoru</th>
+            <th>↓ Dolů</th>
+            <th>Kalorie</th>
+            <th>Pocení</th>
+            <th>Ø tep</th>
+            <th>Max. rychlost</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td class="num">19. 12. 2025</td>
+            <td class="num">57,72 km</td>
+            <td class="num">5:57:05</td>
+            <td class="num">↑ 5 705 m</td>
+            <td class="num">↓ 5 895 m</td>
+            <td class="num">2 144 kcal</td>
+            <td class="num">3 705 ml</td>
+            <td class="num">119 bpm</td>
+            <td class="num">85,3 km/h</td>
+          </tr>
+
+          <tr>
+            <td class="num">20. 12. 2025</td>
+            <td class="num">79,27 km</td>
+            <td class="num">5:55:05</td>
+            <td class="num">↑ 9 833 m</td>
+            <td class="num">↓ 8 970 m</td>
+            <td class="num">2 305 kcal</td>
+            <td class="num">3 801 ml</td>
+            <td class="num">121 bpm</td>
+            <td class="num">90,8 km/h</td>
+          </tr>
+
+          <tr>
+            <td class="num">21. 12. 2025</td>
+            <td class="num">86,40 km</td>
+            <td class="num">6:55:07</td>
+            <td class="num">↑ 9 773 m</td>
+            <td class="num">↓ 9 761 m</td>
+            <td class="num">2 587 kcal</td>
+            <td class="num">4 231 ml</td>
+            <td class="num">119 bpm</td>
+            <td class="num">79,1 km/h</td>
+          </tr>
+
+          <tr class="total">
+            <td></td>
+            <td>223,40 km</td>
+            <td>18:47:17</td>
+            <td>↑ 25 311 m</td>
+            <td>↓ 24 626 m</td>
+            <td>7 036 kcal</td>
+            <td>11 737 ml</td>
+            <td>—</td>
+            <td>90,8 km/h</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section">
+
+    <h2>Média</h2>
+
+    <div class="media-tiles">
+
+      <div class="media-tile" onclick="togglePhotos()">
+        <div class="media-tile-title">Fotky</div>
+        <div class="media-tile-meta" id="photoMeta">Načítám počet…</div>
+        <div class="media-tile-action" id="photoAction">Rozbalit ↓</div>
+      </div>
+
+      <div class="media-tile" onclick="toggleVideos()">
+        <div class="media-tile-title">Videa</div>
+        <div class="media-tile-meta" id="videoMeta">Načítám počet…</div>
+        <div class="media-tile-action" id="videoAction">Rozbalit ↓</div>
+      </div>
+
+    </div>
+
+    <div id="photoPanel" class="media-panel">
+      <div id="photoGallery" class="gallery"></div>
+    </div>
+
+    <div id="videoPanel" class="media-panel">
+      <div id="videoGallery" class="video-grid"></div>
+    </div>
+
+  </section>
+
+  <section class="section">
+
+    <h2>Mapa</h2>
+
+    <iframe
+      class="map-frame"
+      src="mapa.html"
+      loading="lazy"
+      title="Mapa lyžování">
+    </iframe>
+
+  </section>
+
+</main>
+
+<footer>Kocourovy cesty</footer>
+
+<script src="media.js"></script>
+
+<script>
+
+const PHOTO_BASE =
+  "https://cesty.b-cdn.net/2025_12_Dolomity/FOTO/";
+
+const VIDEO_BASE =
+  "https://cesty.b-cdn.net/2025_12_Dolomity/VIDEO/";
+
+const photos =
+  Array.isArray(window.MEDIA_PHOTOS)
+    ? window.MEDIA_PHOTOS
+    : [];
+
+const videos =
+  Array.isArray(window.MEDIA_VIDEOS)
+    ? window.MEDIA_VIDEOS
+    : [];
+
+document.getElementById("photoMeta").textContent =
+  photos.length === 1
+    ? "1 fotka"
+    : `${photos.length} fotek`;
+
+document.getElementById("videoMeta").textContent =
+  videos.length === 1
+    ? "1 video"
+    : `${videos.length} videí`;
+
+let photosBuilt = false;
+let videosBuilt = false;
+
+function buildPhotos(){
+
+  if(photosBuilt) return;
+
+  photosBuilt = true;
+
+  const gallery =
+    document.getElementById("photoGallery");
+
+  if(!photos.length){
+
+    gallery.innerHTML =
+      '<div class="empty">Fotky nenalezeny</div>';
+
+    return;
+
+  }
+
+  photos.forEach(name => {
+
+    const url =
+      PHOTO_BASE + encodeURIComponent(name);
+
+    const card =
+      document.createElement("a");
+
+    card.className = "photo-card";
+    card.href = url;
+    card.target = "_blank";
+    card.rel = "noopener";
+
+    const img =
+      document.createElement("img");
+
+    img.src = url;
+    img.alt = "";
+    img.loading = "lazy";
+
+    const caption =
+      document.createElement("div");
+
+    caption.className = "caption";
+    caption.textContent = name;
+
+    card.appendChild(img);
+    card.appendChild(caption);
+
+    gallery.appendChild(card);
+
+  });
+
+}
+
+function buildVideos(){
+
+  if(videosBuilt) return;
+
+  videosBuilt = true;
+
+  const gallery =
+    document.getElementById("videoGallery");
+
+  if(!videos.length){
+
+    gallery.innerHTML =
+      '<div class="empty">Videa nenalezena</div>';
+
+    return;
+
+  }
+
+  videos.forEach(name => {
+
+    const url =
+      VIDEO_BASE + encodeURIComponent(name);
+
+    const card =
+      document.createElement("a");
+
+    card.className = "video-card";
+    card.href = url;
+    card.target = "_blank";
+    card.rel = "noopener";
+
+    const icon =
+      document.createElement("div");
+
+    icon.className = "video-icon";
+    icon.textContent = "▶";
+
+    const caption =
+      document.createElement("div");
+
+    caption.className = "caption";
+    caption.textContent = name;
+
+    const open =
+      document.createElement("div");
+
+    open.className = "video-open";
+    open.textContent = "Otevřít video →";
+
+    card.appendChild(icon);
+    card.appendChild(caption);
+    card.appendChild(open);
+
+    gallery.appendChild(card);
+
+  });
+
+}
+
+function togglePhotos(){
+
+  const panel =
+    document.getElementById("photoPanel");
+
+  const action =
+    document.getElementById("photoAction");
+
+  const opening =
+    !panel.classList.contains("open");
+
+  if(opening){
+
+    buildPhotos();
+
+    panel.classList.add("open");
+
+    action.textContent = "Sbalit ↑";
+
+  }else{
+
+    panel.classList.remove("open");
+
+    action.textContent = "Rozbalit ↓";
+
+  }
+
+}
+
+function toggleVideos(){
+
+  const panel =
+    document.getElementById("videoPanel");
+
+  const action =
+    document.getElementById("videoAction");
+
+  const opening =
+    !panel.classList.contains("open");
+
+  if(opening){
+
+    buildVideos();
+
+    panel.classList.add("open");
+
+    action.textContent = "Sbalit ↑";
+
+  }else{
+
+    panel.classList.remove("open");
+
+    action.textContent = "Rozbalit ↓";
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>
