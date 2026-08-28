@@ -4,56 +4,40 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mapa — Praha – Mnichov – Curych</title>
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-
 <style>
-html,body,#map{
-  width:100%;
-  height:100%;
-  margin:0;
-}
-html,body{
-  overflow:hidden;
-  font-family:Arial,Helvetica,sans-serif;
-}
-#map{
-  position:absolute;
-  inset:0;
-}
-.leaflet-popup-content{
-  margin:12px 14px;
-  min-width:220px;
-}
-.media-popup img{
-  display:block;
-  width:100%;
-  max-width:520px;
-  height:auto;
-  border-radius:3px;
-}
-.media-popup video{
-  display:block;
-  width:100%;
-  max-width:520px;
-  max-height:520px;
-  background:#000;
-}
-.media-name{
-  margin-top:7px;
-  font-size:12px;
-  color:#555;
-  word-break:break-word;
+:root{--bg:#f5f3ee;--text:#111;--muted:#777;--line:#d9d5cc}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);font-family:Arial,Helvetica,sans-serif}
+#layout{height:100%;display:grid;grid-template-rows:minmax(300px,1fr) 190px}
+#map{width:100%;height:100%}
+#profile-wrap{position:relative;border-top:1px solid var(--line);background:var(--bg);padding:8px 12px 10px}
+#profile{width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+.profile-title{position:absolute;left:18px;top:10px;z-index:3;font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;pointer-events:none}
+#info{position:absolute;right:18px;top:10px;z-index:3;font-size:11px;color:var(--muted);background:rgba(245,243,238,.92);padding:3px 5px;pointer-events:none}
+.leaflet-popup-content{margin:12px 14px;min-width:220px}
+.media-popup img{display:block;width:100%;max-width:520px;height:auto;border-radius:3px}
+.media-popup video{display:block;width:100%;max-width:520px;max-height:520px;background:#000}
+.media-name{margin-top:7px;font-size:12px;color:#555;word-break:break-word}
+.position-marker{background:#111;border:3px solid white;border-radius:50%;box-shadow:0 1px 7px rgba(0,0,0,.35)}
+@media(max-width:600px){
+  #layout{grid-template-rows:minmax(240px,1fr) 165px}
+  #profile-wrap{padding:6px 6px 8px}
+  .profile-title{left:12px}
+  #info{right:10px}
 }
 </style>
 </head>
-
 <body>
-<div id="map"></div>
-
+<div id="layout">
+  <div id="map"></div>
+  <div id="profile-wrap">
+    <div class="profile-title">Profil převýšení</div>
+    <div id="info"></div>
+    <svg id="profile" aria-label="Profil převýšení"></svg>
+  </div>
+</div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<!-- DATA Z TVÉHO QGIS2WEB EXPORTU -->
 <script src="data/tracks_1.js"></script>
 <script src="data/tracks_2.js"></script>
 <script src="data/tracks_3.js"></script>
@@ -65,234 +49,76 @@ html,body{
 <script src="data/tracks_9.js"></script>
 <script src="data/tracks_10.js"></script>
 <script src="data/tracks_11.js"></script>
-
 <script src="data/Videa_12.js"></script>
 <script src="data/Fotky_13.js"></script>
 <script src="data/Fotky_podle_casu_14.js"></script>
-
+<script src="data/profile_data.js"></script>
 <script>
-const PHOTO_BASE = "https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/FOTO/";
-const VIDEO_BASE = "https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/VIDEO/";
+const PHOTO_BASE="https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/FOTO/";
+const VIDEO_BASE="https://cesty.b-cdn.net/2026_08_Praha-Munich-Zurich/VIDEO/";
+const profileData=window.ELEVATION_PROFILE||[];
+const activityBreaks=window.ACTIVITY_BREAKS||[];
 
-const map = L.map("map", {
-  zoomControl: true
-});
+const map=L.map("map",{zoomControl:true});
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap contributors"}).addTo(map);
+const allBounds=L.latLngBounds();
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19,
-  attribution: "&copy; OpenStreetMap contributors"
-}).addTo(map);
-
-const allBounds = L.latLngBounds();
-
-function escapeHtml(value){
-  return String(value ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;");
-}
-
-function basename(path){
-  if(!path) return "";
-  return String(path).replaceAll("\\","/").split("/").pop();
-}
-
-function fileFromProperties(props){
-  props = props || {};
-
-  // U GPS fotek bývá kompletní název v "photo".
-  let f = basename(props.photo || props.path || props.file || "");
-
-  // U ostatních vrstev může být jen filename.
-  if(!f) f = basename(props.filename || props.name || "");
-
-  return f;
-}
-
-function ensurePhotoExtension(name){
-  if(!name) return "";
-  if(/\.(jpg|jpeg|png|webp|gif|heic)$/i.test(name)) return name;
-  return name + ".jpg";
-}
-
+function escapeHtml(value){return String(value??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;")}
+function basename(path){if(!path)return"";return String(path).replaceAll("\\","/").split("/").pop()}
+function fileFromProperties(props){props=props||{};let f=basename(props.photo||props.path||props.file||"");if(!f)f=basename(props.filename||props.name||"");return f}
 function photoPopup(feature){
-  const p = feature.properties || {};
-
-  // Nově používáme rovnou přesnou URL uloženou v mapových datech.
-  if(p.photo_url){
-    const url = String(p.photo_url);
-    const name = p.bunny_file || fileFromProperties(p) || "Fotka";
-    return `
-      <div class="media-popup">
-        <a href="${url}" target="_blank" rel="noopener">
-          <img src="${url}" alt="${escapeHtml(name)}">
-        </a>
-        <div class="media-name">${escapeHtml(name)}</div>
-      </div>`;
-  }
-
-  // Záloha pro starší data.
-  let file = fileFromProperties(p);
-  if(!file) return "Fotka";
-
-  const url = PHOTO_BASE + encodeURIComponent(file);
-
-  return `
-    <div class="media-popup">
-      <a href="${url}" target="_blank" rel="noopener">
-        <img src="${url}" alt="${escapeHtml(file)}">
-      </a>
-      <div class="media-name">${escapeHtml(file)}</div>
-    </div>`;
+  const p=feature.properties||{};let file=fileFromProperties(p);if(!file)return"Fotka";
+  const dot=file.lastIndexOf(".");const stem=dot>=0?file.slice(0,dot):file;const ext=dot>=0?file.slice(dot+1):"";
+  const candidates=[];const add=n=>{if(n&&!candidates.includes(n))candidates.push(n)};
+  add(file);if(ext){add(stem+"."+ext.toLowerCase());add(stem+"."+ext.toUpperCase())}
+  add(stem+".jpg");add(stem+".JPG");add(stem+".jpeg");add(stem+".JPEG");add(stem+".png");add(stem+".PNG");
+  const urls=candidates.map(name=>PHOTO_BASE+encodeURIComponent(name));const first=urls[0];
+  return `<div class="media-popup"><a href="${first}" target="_blank" rel="noopener" class="photo-link"><img src="${first}" alt="${escapeHtml(file)}" data-urls='${JSON.stringify(urls).replaceAll("'","&#39;")}' data-i="0" onerror="const urls=JSON.parse(this.dataset.urls);let i=Number(this.dataset.i)+1;if(i<urls.length){this.dataset.i=i;this.src=urls[i];this.parentElement.href=urls[i];}"></a><div class="media-name">${escapeHtml(file)}</div></div>`;
 }
-
 function gpsPhotoPopup(feature){
-  const p = feature.properties || {};
-
-  if(p.photo_url){
-    const url = String(p.photo_url);
-    const name = p.bunny_file || p.photo || "Fotka";
-    return `
-      <div class="media-popup">
-        <a href="${url}" target="_blank" rel="noopener">
-          <img src="${url}" alt="${escapeHtml(name)}">
-        </a>
-        <div class="media-name">${escapeHtml(name)}</div>
-      </div>`;
-  }
-
-  // Záloha pro starší export.
-  const rawPhoto = String(p.photo || "");
-  if(!rawPhoto) return "Fotka";
-
-  const bunnyName = rawPhoto.replace(/[\\/:]/g, "_").trim();
-  const url = PHOTO_BASE + encodeURIComponent(bunnyName);
-
-  return `
-    <div class="media-popup">
-      <a href="${url}" target="_blank" rel="noopener">
-        <img src="${url}" alt="${escapeHtml(bunnyName)}">
-      </a>
-      <div class="media-name">${escapeHtml(bunnyName)}</div>
-    </div>`;
+  const p=feature.properties||{};const rawPhoto=String(p.photo||"");if(!rawPhoto)return"Fotka";
+  const bunnyName=rawPhoto.replace(/^([A-Za-z]):[\\/]/,"$1__").replace(/[\\/]/g,"_").trim();
+  const url=PHOTO_BASE+encodeURIComponent(bunnyName);
+  return `<div class="media-popup"><a href="${url}" target="_blank" rel="noopener"><img src="${url}" alt="${escapeHtml(bunnyName)}"></a><div class="media-name">${escapeHtml(bunnyName)}</div></div>`;
 }
-
 function videoPopup(feature){
-  const p = feature.properties || {};
-  let file = p.bunny_file || fileFromProperties(p);
-  if(!file) return "Video";
-
-  const url = p.video_url || (VIDEO_BASE + encodeURIComponent(file));
-
-  return `
-    <div class="media-popup">
-      <video controls preload="metadata">
-        <source src="${url}">
-        Prohlížeč toto video nepodporuje.
-      </video>
-      <div class="media-name">${escapeHtml(file)}</div>
-    </div>`;
+  const p=feature.properties||{};let file=fileFromProperties(p);if(!file)return"Video";const url=VIDEO_BASE+encodeURIComponent(file);
+  return `<div class="media-popup"><video controls preload="metadata"><source src="${url}">Prohlížeč toto video nepodporuje.</video><div class="media-name">${escapeHtml(file)}</div></div>`;
 }
+function addGeoJson(data,options){if(!data||!data.type)return;const layer=L.geoJSON(data,options).addTo(map);try{const b=layer.getBounds();if(b&&b.isValid())allBounds.extend(b)}catch(e){}}
+function findGeoJsonGlobals(){const found=[];for(const key of Object.keys(window)){let value;try{value=window[key]}catch(e){continue}if(value&&typeof value==="object"&&(value.type==="FeatureCollection"||value.type==="Feature"))found.push({key,value})}return found}
 
-function addGeoJson(data, options){
-  if(!data || !data.type) return;
-
-  const layer = L.geoJSON(data, options).addTo(map);
-
-  try{
-    const b = layer.getBounds();
-    if(b && b.isValid()) allBounds.extend(b);
-  }catch(e){}
-}
-
-function findGeoJsonGlobals(){
-  const found = [];
-
-  for(const key of Object.keys(window)){
-    let value;
-    try{ value = window[key]; }catch(e){ continue; }
-
-    if(value &&
-       typeof value === "object" &&
-       (value.type === "FeatureCollection" || value.type === "Feature")){
-      found.push({key, value});
-    }
-  }
-
-  return found;
-}
-
-const datasets = findGeoJsonGlobals();
-
-datasets.forEach(({key, value}) => {
-  const k = key.toLowerCase();
-
-  if(k.includes("fotky_podle_casu")){
-    addGeoJson(value, {
-      pointToLayer: (feature, latlng) =>
-        L.circleMarker(latlng,{
-          radius:6,
-          color:"#fff",
-          weight:1.5,
-          fillColor:"#111",
-          fillOpacity:1
-        }),
-      onEachFeature: (feature, layer) =>
-        layer.bindPopup(photoPopup(feature), {maxWidth:560})
-    });
-    return;
-  }
-
-  if(k.includes("fotky")){
-    addGeoJson(value, {
-      pointToLayer: (feature, latlng) =>
-        L.circleMarker(latlng,{
-          radius:6,
-          color:"#fff",
-          weight:1.5,
-          fillColor:"#111",
-          fillOpacity:1
-        }),
-      onEachFeature: (feature, layer) =>
-        layer.bindPopup(gpsPhotoPopup(feature), {maxWidth:560})
-    });
-    return;
-  }
-
-  if(k.includes("videa")){
-    addGeoJson(value, {
-      pointToLayer: (feature, latlng) =>
-        L.circleMarker(latlng,{
-          radius:7,
-          color:"#fff",
-          weight:2,
-          fillColor:"#111",
-          fillOpacity:1
-        }),
-      onEachFeature: (feature, layer) =>
-        layer.bindPopup(videoPopup(feature), {maxWidth:560})
-    });
-    return;
-  }
-
-  if(k.includes("track")){
-    addGeoJson(value, {
-      style:{
-        color:"#111",
-        weight:4,
-        opacity:.9
-      }
-    });
-  }
+findGeoJsonGlobals().forEach(({key,value})=>{
+  const k=key.toLowerCase();
+  if(k.includes("fotky_podle_casu")){addGeoJson(value,{pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:6,color:"#fff",weight:1.5,fillColor:"#111",fillOpacity:1}),onEachFeature:(f,l)=>l.bindPopup(photoPopup(f),{maxWidth:560})});return}
+  if(k.includes("fotky")){addGeoJson(value,{pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:6,color:"#fff",weight:1.5,fillColor:"#111",fillOpacity:1}),onEachFeature:(f,l)=>l.bindPopup(gpsPhotoPopup(f),{maxWidth:560})});return}
+  if(k.includes("videa")){addGeoJson(value,{pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:7,color:"#fff",weight:2,fillColor:"#111",fillOpacity:1}),onEachFeature:(f,l)=>l.bindPopup(videoPopup(f),{maxWidth:560})});return}
+  if(k.includes("track")){addGeoJson(value,{style:{color:"#111",weight:4,opacity:.9}})}
 });
+if(allBounds.isValid())map.fitBounds(allBounds,{padding:[25,25]});else map.setView([47.3,9.5],7);
 
-if(allBounds.isValid()){
-  map.fitBounds(allBounds, {padding:[25,25]});
-}else{
-  map.setView([47.3, 9.5], 7);
+const positionIcon=L.divIcon({className:"",html:'<div class="position-marker" style="width:16px;height:16px"></div>',iconSize:[16,16],iconAnchor:[8,8]});
+const positionMarker=L.marker([0,0],{icon:positionIcon,interactive:false,opacity:0}).addTo(map);
+
+const svg=document.getElementById("profile");const info=document.getElementById("info");const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs={}){const n=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);return n}
+function nearestProfileIndexByDistance(km){let lo=0,hi=profileData.length-1;while(lo<hi){const mid=(lo+hi)>>1;if(profileData[mid][0]<km)lo=mid+1;else hi=mid}if(lo>0&&Math.abs(profileData[lo-1][0]-km)<Math.abs(profileData[lo][0]-km))return lo-1;return lo}
+function drawProfile(){
+  svg.innerHTML="";if(profileData.length<2)return;
+  const box=svg.getBoundingClientRect();const W=Math.max(320,box.width);const H=Math.max(120,box.height);svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const pad={l:42,r:12,t:28,b:25};const iw=W-pad.l-pad.r;const ih=H-pad.t-pad.b;const maxD=profileData[profileData.length-1][0];
+  let minA=Math.min(...profileData.map(p=>p[1]));let maxA=Math.max(...profileData.map(p=>p[1]));minA=Math.floor(minA/100)*100;maxA=Math.ceil(maxA/100)*100;if(maxA===minA)maxA=minA+100;
+  const x=d=>pad.l+(d/maxD)*iw;const y=a=>pad.t+(maxA-a)/(maxA-minA)*ih;
+  for(let i=0;i<=3;i++){const alt=minA+(maxA-minA)*(i/3);const yy=y(alt);svg.appendChild(el("line",{x1:pad.l,y1:yy,x2:W-pad.r,y2:yy,stroke:"#d9d5cc","stroke-width":"1"}));const t=el("text",{x:pad.l-7,y:yy+4,"text-anchor":"end",fill:"#777","font-size":"10"});t.textContent=Math.round(alt)+" m";svg.appendChild(t)}
+  activityBreaks.forEach(d=>{const xx=x(d);svg.appendChild(el("line",{x1:xx,y1:pad.t,x2:xx,y2:H-pad.b,stroke:"#aaa","stroke-width":"1","stroke-dasharray":"3 4"}))});
+  let area=`M ${x(profileData[0][0])} ${H-pad.b}`;for(const p of profileData)area+=` L ${x(p[0])} ${y(p[1])}`;area+=` L ${x(profileData[profileData.length-1][0])} ${H-pad.b} Z`;svg.appendChild(el("path",{d:area,fill:"rgba(17,17,17,.10)",stroke:"none"}));
+  let line="";profileData.forEach((p,i)=>{line+=(i===0?"M ":" L ")+x(p[0])+" "+y(p[1])});svg.appendChild(el("path",{d:line,fill:"none",stroke:"#111","stroke-width":"2","stroke-linejoin":"round","stroke-linecap":"round"}));
+  const distSteps=W<600?3:6;for(let i=0;i<=distSteps;i++){const d=maxD*i/distSteps;const xx=x(d);const t=el("text",{x:xx,y:H-7,"text-anchor":i===0?"start":i===distSteps?"end":"middle",fill:"#777","font-size":"10"});t.textContent=Math.round(d)+" km";svg.appendChild(t)}
+  const cursor=el("line",{x1:pad.l,y1:pad.t,x2:pad.l,y2:H-pad.b,stroke:"#111","stroke-width":"1","stroke-dasharray":"3 3",opacity:"0"});const dot=el("circle",{cx:pad.l,cy:pad.t,r:"4.5",fill:"#111",stroke:"#fff","stroke-width":"2",opacity:"0"});svg.appendChild(cursor);svg.appendChild(dot);
+  function updateFromClientX(clientX){const rect=svg.getBoundingClientRect();let sx=(clientX-rect.left)*(W/rect.width);sx=Math.max(pad.l,Math.min(W-pad.r,sx));const km=((sx-pad.l)/iw)*maxD;const idx=nearestProfileIndexByDistance(km);const p=profileData[idx];const xx=x(p[0]),yy=y(p[1]);cursor.setAttribute("x1",xx);cursor.setAttribute("x2",xx);cursor.setAttribute("opacity","1");dot.setAttribute("cx",xx);dot.setAttribute("cy",yy);dot.setAttribute("opacity","1");info.textContent=`${p[0].toFixed(1)} km  ·  ${Math.round(p[1])} m`;positionMarker.setLatLng([p[2],p[3]]).setOpacity(1)}
+  svg.onpointermove=e=>updateFromClientX(e.clientX);svg.onpointerdown=e=>{svg.setPointerCapture?.(e.pointerId);updateFromClientX(e.clientX)};svg.onpointerleave=()=>{cursor.setAttribute("opacity","0");dot.setAttribute("opacity","0");positionMarker.setOpacity(0);info.textContent=""};
 }
+drawProfile();window.addEventListener("resize",()=>{clearTimeout(window.__profileResize);window.__profileResize=setTimeout(drawProfile,100)});
 </script>
-
 </body>
 </html>
