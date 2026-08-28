@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Běžky — Kocourovy cesty</title>
+
+  <style>
+    :root{
+      --bg:#f5f3ee;
+      --text:#111;
+      --muted:#777;
+      --line:#d9d5cc;
+      --card:#ebe7df;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:Arial,Helvetica,sans-serif;
+    }
+
+    .page{
+      width:min(1180px,calc(100% - 40px));
+      margin:0 auto;
+      padding:26px 0 70px;
+    }
+
+    header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:20px;
+      padding-bottom:22px;
+      border-bottom:1px solid var(--line);
+    }
+
+    header a{
+      color:var(--text);
+      text-decoration:none;
+    }
+
+    .brand{
+      font-size:14px;
+      font-weight:700;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+    }
+
+    .archive{
+      font-size:13px;
+    }
+
+    .hero{
+      padding:48px 0 34px;
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size:clamp(34px,6vw,72px);
+      line-height:.95;
+      letter-spacing:-.04em;
+    }
+
+    .meta{
+      color:var(--muted);
+      font-size:14px;
+      text-transform:uppercase;
+      letter-spacing:.05em;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      border-top:1px solid var(--line);
+      border-left:1px solid var(--line);
+      margin:8px 0 42px;
+    }
+
+    .stat{
+      padding:18px;
+      border-right:1px solid var(--line);
+      border-bottom:1px solid var(--line);
+      min-height:92px;
+    }
+
+    .stat-value{
+      font-size:25px;
+      font-weight:700;
+      margin-bottom:7px;
+    }
+
+    .stat-label{
+      color:var(--muted);
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+
+    section{
+      margin-top:42px;
+    }
+
+    .section-title{
+      margin:0 0 14px;
+      font-size:13px;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+
+    .map-frame{
+      display:block;
+      width:100%;
+      height:620px;
+      border:1px solid var(--line);
+      background:#fff;
+    }
+
+    .media-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+
+    .media-box{
+      border:1px solid var(--line);
+      background:transparent;
+    }
+
+    .media-button{
+      width:100%;
+      border:0;
+      background:transparent;
+      color:var(--text);
+      font:inherit;
+      padding:18px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      cursor:pointer;
+      text-align:left;
+    }
+
+    .media-button strong{
+      font-size:14px;
+      text-transform:uppercase;
+      letter-spacing:.05em;
+    }
+
+    .media-count{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .media-content{
+      display:none;
+      padding:0 14px 14px;
+    }
+
+    .media-box.open .media-content{
+      display:block;
+    }
+
+    .photo-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:8px;
+    }
+
+    .photo-grid img{
+      width:100%;
+      height:220px;
+      display:block;
+      object-fit:cover;
+      background:var(--card);
+      cursor:pointer;
+    }
+
+    .video-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .video-list video{
+      display:block;
+      width:100%;
+      max-height:520px;
+      background:#111;
+    }
+
+    .empty{
+      color:var(--muted);
+      font-size:13px;
+      padding:8px 4px;
+    }
+
+    @media(max-width:800px){
+      .page{width:min(100% - 24px,1180px);padding-top:18px}
+      .hero{padding:34px 0 24px}
+      .stats{grid-template-columns:repeat(2,1fr)}
+      .media-grid{grid-template-columns:1fr}
+      .photo-grid{grid-template-columns:repeat(2,1fr)}
+      .map-frame{height:500px}
+    }
+
+    @media(max-width:520px){
+      .stats{grid-template-columns:1fr 1fr}
+      .stat{padding:14px}
+      .stat-value{font-size:20px}
+      .photo-grid{grid-template-columns:1fr}
+      .photo-grid img{height:auto}
+      .map-frame{height:440px}
+    }
+  </style>
+</head>
+
+<body>
+<div class="page">
+
+  <header>
+    <a class="brand" href="/">Kocourovy cesty</a>
+    <a class="archive" href="/archiv.html">Archiv</a>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>Běžky</h1>
+      <div class="meta">23. 2. 2026 · běžky – klasický styl</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value">23,38 km</div>
+        <div class="stat-label">Vzdálenost</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-value">4:07:19</div>
+        <div class="stat-label">Čas aktivity</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-value">↑ 554 m</div>
+        <div class="stat-label">Nahoru</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-value">↓ 536 m</div>
+        <div class="stat-label">Dolů</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-value">2 063 kcal</div>
+        <div class="stat-label">Kalorie</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-value">2,55 l</div>
+        <div class="stat-label">Pocení</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-value">138 bpm</div>
+        <div class="stat-label">Ø tep</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-value">182 bpm</div>
+        <div class="stat-label">Max. tep</div>
+      </div>
+    </div>
+
+    <section>
+      <h2 class="section-title">Mapa a výškový profil</h2>
+      <iframe class="map-frame" src="mapa.html" loading="lazy" title="Mapa aktivity Běžky"></iframe>
+    </section>
+
+    <section>
+      <h2 class="section-title">Média</h2>
+
+      <div class="media-grid">
+
+        <div class="media-box" id="photosBox">
+          <button class="media-button" type="button" onclick="togglePhotos()">
+            <strong>Fotky</strong>
+            <span class="media-count" id="photoCount">0</span>
+          </button>
+          <div class="media-content">
+            <div class="photo-grid" id="photoGrid"></div>
+          </div>
+        </div>
+
+        <div class="media-box" id="videosBox">
+          <button class="media-button" type="button" onclick="toggleVideos()">
+            <strong>Videa</strong>
+            <span class="media-count" id="videoCount">0</span>
+          </button>
+          <div class="media-content">
+            <div class="video-list" id="videoList"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="media.js"></script>
+<script>
+  /*
+    Pokud se Bunny složka jmenuje jinak, změň jen tento jeden řádek.
+  */
+  const BUNNY_FOLDER = "2026_02_Bezky";
+
+  const PHOTO_BASE =
+    "https://cesty.b-cdn.net/" + BUNNY_FOLDER + "/FOTO/";
+
+  const VIDEO_BASE =
+    "https://cesty.b-cdn.net/" + BUNNY_FOLDER + "/VIDEO/";
+
+  const photos = Array.isArray(window.MEDIA_PHOTOS)
+    ? window.MEDIA_PHOTOS
+    : [];
+
+  const videos = Array.isArray(window.MEDIA_VIDEOS)
+    ? window.MEDIA_VIDEOS
+    : [];
+
+  document.getElementById("photoCount").textContent = photos.length;
+  document.getElementById("videoCount").textContent = videos.length;
+
+  let photosLoaded = false;
+  let videosLoaded = false;
+
+  function togglePhotos(){
+    const box = document.getElementById("photosBox");
+    box.classList.toggle("open");
+
+    if(box.classList.contains("open") && !photosLoaded){
+      loadPhotos();
+      photosLoaded = true;
+    }
+  }
+
+  function toggleVideos(){
+    const box = document.getElementById("videosBox");
+    box.classList.toggle("open");
+
+    if(box.classList.contains("open") && !videosLoaded){
+      loadVideos();
+      videosLoaded = true;
+    }
+  }
+
+  function loadPhotos(){
+    const grid = document.getElementById("photoGrid");
+
+    if(!photos.length){
+      grid.innerHTML = '<div class="empty">Žádné fotky.</div>';
+      return;
+    }
+
+    photos.forEach(file => {
+      const img = document.createElement("img");
+      img.loading = "lazy";
+      img.alt = "";
+      img.src = PHOTO_BASE + encodeURIComponent(file);
+      img.onclick = () => window.open(
+        PHOTO_BASE + encodeURIComponent(file),
+        "_blank"
+      );
+      grid.appendChild(img);
+    });
+  }
+
+  function loadVideos(){
+    const list = document.getElementById("videoList");
+
+    if(!videos.length){
+      list.innerHTML = '<div class="empty">Žádná videa.</div>';
+      return;
+    }
+
+    videos.forEach(file => {
+      const video = document.createElement("video");
+      video.controls = true;
+      video.preload = "none";
+
+      const source = document.createElement("source");
+      source.src = VIDEO_BASE + encodeURIComponent(file);
+
+      video.appendChild(source);
+      list.appendChild(video);
+    });
+  }
+</script>
+
+</body>
+</html>
