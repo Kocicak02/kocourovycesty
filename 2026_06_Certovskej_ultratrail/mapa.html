@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mapa — Čertovskej ultratrail 2026</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+html,body,#map{
+  width:100%;
+  height:100%;
+  margin:0;
+}
+html,body{
+  overflow:hidden;
+  font-family:Arial,Helvetica,sans-serif;
+}
+#map{
+  position:absolute;
+  inset:0;
+}
+.leaflet-popup-content{
+  margin:12px 14px;
+  min-width:220px;
+}
+.media-popup img{
+  display:block;
+  width:100%;
+  max-width:520px;
+  height:auto;
+  border-radius:3px;
+}
+.media-name{
+  margin-top:7px;
+  font-size:12px;
+  color:#555;
+  word-break:break-word;
+}
+</style>
+</head>
+
+<body>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Aktuální seznam souborů z Bunny generovaný GitHub Action -->
+<script src="media.js"></script>
+
+<!-- Data z QGIS -->
+<script src="data/tracks_1.js"></script>
+<script src="data/Fotky_podle_casu_2.js"></script>
+
+<script>
+const PHOTO_BASE =
+  "https://cesty.b-cdn.net/2026_06_Certovsky-Ultratrail/FOTO/";
+
+const map = L.map("map", {
+  zoomControl: true
+});
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution: "&copy; OpenStreetMap contributors"
+}).addTo(map);
+
+const allBounds = L.latLngBounds();
+
+function escapeHtml(value){
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;");
+}
+
+/*
+  media.js je zdroj pravdy.
+  Najde skutečný název souboru na Bunny:
+  - IMG_2361.JPEG
+  - nebo například C__Users_..._IMG_2361.JPEG
+
+  Díky tomu mapa není závislá na lokální Windows cestě z QGISu.
+*/
+const CURRENT_PHOTOS =
+  Array.isArray(window.MEDIA_PHOTOS) ? window.MEDIA_PHOTOS : [];
+
+function resolveBunnyPhoto(filename){
+  const name = String(filename || "").trim();
+  if(!name) return "";
+
+  // 1) Přesná shoda
+  const exact = CURRENT_PHOTOS.find(x => x === name);
+  if(exact) return exact;
+
+  // 2) Bunny soubor může mít před názvem sanitizovanou cestu
+  const suffix = CURRENT_PHOTOS.find(x =>
+    x.endsWith("_" + name) || x.endsWith(name)
+  );
+  if(suffix) return suffix;
+
+  // Když media.js není načtený, zkusíme prostý filename.
+  if(!CURRENT_PHOTOS.length) return name;
+
+  // Soubor není na Bunny -> marker vůbec nevytvoříme.
+  return "";
+}
+
+function photoPopup(feature){
+  const p = feature.properties || {};
+  const bunnyFile = resolveBunnyPhoto(p.filename);
+
+  if(!bunnyFile) return "";
+
+  const url = PHOTO_BASE + encodeURIComponent(bunnyFile);
+
+  return `
+    <div class="media-popup">
+      <a href="${url}" target="_blank" rel="noopener">
+        <img src="${url}" alt="${escapeHtml(p.filename || bunnyFile)}">
+      </a>
+      <div class="media-name">${escapeHtml(p.filename || bunnyFile)}</div>
+    </div>`;
+}
+
+function addTrack(data){
+  if(!data) return;
+
+  const layer = L.geoJSON(data, {
+    style:{
+      color:"#111",
+      weight:4,
+      opacity:.9
+    }
+  }).addTo(map);
+
+  try{
+    const b = layer.getBounds();
+    if(b && b.isValid()) allBounds.extend(b);
+  }catch(e){}
+}
+
+function addPhotos(data){
+  if(!data || !Array.isArray(data.features)) return;
+
+  // Pokud existuje media.js, zobrazíme jen fotky,
+  // které jsou skutečně v Bunny seznamu.
+  const filtered = {
+    ...data,
+    features: data.features.filter(feature => {
+      const p = feature.properties || {};
+      return Boolean(resolveBunnyPhoto(p.filename));
+    })
+  };
+
+  const layer = L.geoJSON(filtered, {
+    pointToLayer: (feature, latlng) =>
+      L.circleMarker(latlng,{
+        radius:6,
+        color:"#fff",
+        weight:1.5,
+        fillColor:"#111",
+        fillOpacity:1
+      }),
+
+    onEachFeature: (feature, layer) => {
+      const html = photoPopup(feature);
+      if(html){
+        layer.bindPopup(html, {maxWidth:560});
+      }
+    }
+  }).addTo(map);
+
+  try{
+    const b = layer.getBounds();
+    if(b && b.isValid()) allBounds.extend(b);
+  }catch(e){}
+}
+
+if(typeof json_tracks_1 !== "undefined"){
+  addTrack(json_tracks_1);
+}
+
+if(typeof json_Fotky_podle_casu_2 !== "undefined"){
+  addPhotos(json_Fotky_podle_casu_2);
+}
+
+if(allBounds.isValid()){
+  map.fitBounds(allBounds, {padding:[25,25]});
+}else{
+  map.setView([50.59,14.75], 11);
+}
+</script>
+
+</body>
+</html>
