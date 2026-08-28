@@ -32,12 +32,6 @@ html,body{
   height:auto;
   border-radius:3px;
 }
-.media-popup video{
-  display:block;
-  width:100%;
-  max-width:520px;
-  height:auto;
-}
 .media-name{
   margin-top:7px;
   font-size:12px;
@@ -53,16 +47,11 @@ html,body{
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script src="data/track_1.js"></script>
-<script src="data/Fotky_2.js"></script>
-<script src="data/Fotky_podle_casu_3.js"></script>
-<script src="data/Videa_4.js"></script>
+<script src="data/Fotky_podle_casu_2.js"></script>
 
 <script>
 const PHOTO_BASE =
   "https://cesty.b-cdn.net/2026_07_Dolomity/FOTO/";
-
-const VIDEO_BASE =
-  "https://cesty.b-cdn.net/2026_07_Dolomity/VIDEO/";
 
 const map = L.map("map", {
   zoomControl:true
@@ -83,50 +72,28 @@ function esc(value){
     .replaceAll('"',"&quot;");
 }
 
-/*
-  DŮLEŽITÉ:
-  QGIS ve vrstvě obsahuje špatné hodnoty photo_url / bunny_file
-  typu C__Users_honza_...
-  Tyto hodnoty ZÁMĚRNĚ ignorujeme.
-
-  Bunny u Dolomit používá prosté názvy:
-  IMG_2569.JPEG
-  IMG_2618.MP4
-*/
-function mediaFilename(props){
+function photoFilename(props){
   if(!props) return "";
 
   if(props.filename){
     return String(props.filename).trim();
   }
 
-  const raw =
-    props.path ||
-    props.photo ||
-    props.video ||
-    "";
-
+  const raw = props.path || "";
   if(!raw) return "";
 
   return String(raw).split(/[\\/]/).pop().trim();
 }
 
 function photoUrl(props){
-  const file = mediaFilename(props);
+  const file = photoFilename(props);
   if(!file) return "";
+
   return PHOTO_BASE + encodeURIComponent(file);
 }
 
-function videoUrl(props){
-  const file = mediaFilename(props);
-  if(!file) return "";
-  return VIDEO_BASE + encodeURIComponent(file);
-}
-
-function addTrack(data){
-  if(!data) return;
-
-  const layer = L.geoJSON(data,{
+if(typeof json_track_1 !== "undefined"){
+  const trackLayer = L.geoJSON(json_track_1,{
     style:{
       color:"#111",
       weight:4,
@@ -134,16 +101,12 @@ function addTrack(data){
     }
   }).addTo(map);
 
-  try{
-    const b=layer.getBounds();
-    if(b.isValid()) allBounds.extend(b);
-  }catch(e){}
+  const b = trackLayer.getBounds();
+  if(b.isValid()) allBounds.extend(b);
 }
 
-function addPhotoLayer(data){
-  if(!data) return;
-
-  const layer=L.geoJSON(data,{
+if(typeof json_Fotky_podle_casu_2 !== "undefined"){
+  const photoLayer = L.geoJSON(json_Fotky_podle_casu_2,{
     pointToLayer:(feature,latlng)=>
       L.circleMarker(latlng,{
         radius:6,
@@ -154,9 +117,9 @@ function addPhotoLayer(data){
       }),
 
     onEachFeature:(feature,layer)=>{
-      const p=feature.properties||{};
-      const file=mediaFilename(p);
-      const url=photoUrl(p);
+      const p = feature.properties || {};
+      const file = photoFilename(p);
+      const url = photoUrl(p);
 
       if(!url) return;
 
@@ -171,63 +134,8 @@ function addPhotoLayer(data){
     }
   }).addTo(map);
 
-  try{
-    const b=layer.getBounds();
-    if(b.isValid()) allBounds.extend(b);
-  }catch(e){}
-}
-
-function addVideoLayer(data){
-  if(!data) return;
-
-  const layer=L.geoJSON(data,{
-    pointToLayer:(feature,latlng)=>
-      L.circleMarker(latlng,{
-        radius:7,
-        color:"#fff",
-        weight:1.5,
-        fillColor:"#111",
-        fillOpacity:1
-      }),
-
-    onEachFeature:(feature,layer)=>{
-      const p=feature.properties||{};
-      const file=mediaFilename(p);
-      const url=videoUrl(p);
-
-      if(!url) return;
-
-      layer.bindPopup(`
-        <div class="media-popup">
-          <video controls preload="none">
-            <source src="${url}" type="video/mp4">
-          </video>
-          <div class="media-name">${esc(file)}</div>
-        </div>
-      `,{maxWidth:560});
-    }
-  }).addTo(map);
-
-  try{
-    const b=layer.getBounds();
-    if(b.isValid()) allBounds.extend(b);
-  }catch(e){}
-}
-
-if(typeof json_track_1!=="undefined"){
-  addTrack(json_track_1);
-}
-
-if(typeof json_Fotky_2!=="undefined"){
-  addPhotoLayer(json_Fotky_2);
-}
-
-if(typeof json_Fotky_podle_casu_3!=="undefined"){
-  addPhotoLayer(json_Fotky_podle_casu_3);
-}
-
-if(typeof json_Videa_4!=="undefined"){
-  addVideoLayer(json_Videa_4);
+  const b = photoLayer.getBounds();
+  if(b.isValid()) allBounds.extend(b);
 }
 
 if(allBounds.isValid()){
