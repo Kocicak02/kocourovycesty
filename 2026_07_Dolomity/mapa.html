@@ -52,7 +52,6 @@ html,body{
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<!-- QGIS export data -->
 <script src="data/track_1.js"></script>
 <script src="data/Fotky_2.js"></script>
 <script src="data/Fotky_podle_casu_3.js"></script>
@@ -66,12 +65,12 @@ const VIDEO_BASE =
   "https://cesty.b-cdn.net/2026_07_Dolomity/VIDEO/";
 
 const map = L.map("map", {
-  zoomControl: true
+  zoomControl:true
 });
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19,
-  attribution: "&copy; OpenStreetMap contributors"
+  maxZoom:19,
+  attribution:"&copy; OpenStreetMap contributors"
 }).addTo(map);
 
 const allBounds = L.latLngBounds();
@@ -84,45 +83,50 @@ function esc(value){
     .replaceAll('"',"&quot;");
 }
 
-function filenameFromProperties(props){
+/*
+  DŮLEŽITÉ:
+  QGIS ve vrstvě obsahuje špatné hodnoty photo_url / bunny_file
+  typu C__Users_honza_...
+  Tyto hodnoty ZÁMĚRNĚ ignorujeme.
+
+  Bunny u Dolomit používá prosté názvy:
+  IMG_2569.JPEG
+  IMG_2618.MP4
+*/
+function mediaFilename(props){
   if(!props) return "";
 
-  if(props.filename) return String(props.filename);
+  if(props.filename){
+    return String(props.filename).trim();
+  }
 
   const raw =
     props.path ||
     props.photo ||
     props.video ||
-    props.bunny_file ||
     "";
 
   if(!raw) return "";
 
-  return String(raw).split(/[\\/]/).pop();
+  return String(raw).split(/[\\/]/).pop().trim();
 }
 
 function photoUrl(props){
-  if(props?.photo_url) return props.photo_url;
-
-  const file = filenameFromProperties(props);
+  const file = mediaFilename(props);
   if(!file) return "";
-
   return PHOTO_BASE + encodeURIComponent(file);
 }
 
 function videoUrl(props){
-  if(props?.video_url) return props.video_url;
-
-  const file = filenameFromProperties(props);
+  const file = mediaFilename(props);
   if(!file) return "";
-
   return VIDEO_BASE + encodeURIComponent(file);
 }
 
 function addTrack(data){
   if(!data) return;
 
-  const layer = L.geoJSON(data, {
+  const layer = L.geoJSON(data,{
     style:{
       color:"#111",
       weight:4,
@@ -131,7 +135,7 @@ function addTrack(data){
   }).addTo(map);
 
   try{
-    const b = layer.getBounds();
+    const b=layer.getBounds();
     if(b.isValid()) allBounds.extend(b);
   }catch(e){}
 }
@@ -139,7 +143,7 @@ function addTrack(data){
 function addPhotoLayer(data){
   if(!data) return;
 
-  const layer = L.geoJSON(data, {
+  const layer=L.geoJSON(data,{
     pointToLayer:(feature,latlng)=>
       L.circleMarker(latlng,{
         radius:6,
@@ -150,25 +154,25 @@ function addPhotoLayer(data){
       }),
 
     onEachFeature:(feature,layer)=>{
-      const p = feature.properties || {};
-      const url = photoUrl(p);
-      const name = filenameFromProperties(p);
+      const p=feature.properties||{};
+      const file=mediaFilename(p);
+      const url=photoUrl(p);
 
       if(!url) return;
 
       layer.bindPopup(`
         <div class="media-popup">
           <a href="${url}" target="_blank" rel="noopener">
-            <img src="${url}" alt="${esc(name)}">
+            <img src="${url}" alt="${esc(file)}">
           </a>
-          <div class="media-name">${esc(name)}</div>
+          <div class="media-name">${esc(file)}</div>
         </div>
       `,{maxWidth:560});
     }
   }).addTo(map);
 
   try{
-    const b = layer.getBounds();
+    const b=layer.getBounds();
     if(b.isValid()) allBounds.extend(b);
   }catch(e){}
 }
@@ -176,7 +180,7 @@ function addPhotoLayer(data){
 function addVideoLayer(data){
   if(!data) return;
 
-  const layer = L.geoJSON(data, {
+  const layer=L.geoJSON(data,{
     pointToLayer:(feature,latlng)=>
       L.circleMarker(latlng,{
         radius:7,
@@ -187,9 +191,9 @@ function addVideoLayer(data){
       }),
 
     onEachFeature:(feature,layer)=>{
-      const p = feature.properties || {};
-      const url = videoUrl(p);
-      const name = filenameFromProperties(p);
+      const p=feature.properties||{};
+      const file=mediaFilename(p);
+      const url=videoUrl(p);
 
       if(!url) return;
 
@@ -198,35 +202,31 @@ function addVideoLayer(data){
           <video controls preload="none">
             <source src="${url}" type="video/mp4">
           </video>
-          <div class="media-name">${esc(name)}</div>
+          <div class="media-name">${esc(file)}</div>
         </div>
       `,{maxWidth:560});
     }
   }).addTo(map);
 
   try{
-    const b = layer.getBounds();
+    const b=layer.getBounds();
     if(b.isValid()) allBounds.extend(b);
   }catch(e){}
 }
 
-/* TRASA */
-if(typeof json_track_1 !== "undefined"){
+if(typeof json_track_1!=="undefined"){
   addTrack(json_track_1);
 }
 
-/* FOTKY S VLASTNÍ GPS */
-if(typeof json_Fotky_2 !== "undefined"){
+if(typeof json_Fotky_2!=="undefined"){
   addPhotoLayer(json_Fotky_2);
 }
 
-/* FOTKY PODLE ČASU */
-if(typeof json_Fotky_podle_casu_3 !== "undefined"){
+if(typeof json_Fotky_podle_casu_3!=="undefined"){
   addPhotoLayer(json_Fotky_podle_casu_3);
 }
 
-/* VIDEA */
-if(typeof json_Videa_4 !== "undefined"){
+if(typeof json_Videa_4!=="undefined"){
   addVideoLayer(json_Videa_4);
 }
 
