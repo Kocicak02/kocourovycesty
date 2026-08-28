@@ -166,8 +166,6 @@ window.MEDIA_VIDEOS = [
   "IMG_2622.MP4",
   "IMG_2623.MP4",
   "IMG_2629.MP4",
-  "IMG_2630.MP4",
-  "IMG_2631.MP4",
   "IMG_2633.MP4",
   "IMG_2649.MP4",
   "IMG_2808.MP4",
@@ -176,6 +174,5 @@ window.MEDIA_VIDEOS = [
   "IMG_2817.MP4",
   "IMG_2818.MP4",
   "IMG_2832.MP4",
-  "IMG_2837.MP4",
   "IMG_2838.MP4"
 ];
