@@ -7,47 +7,22 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;background:#f5f3ee;color:#111;font-family:Arial,Helvetica,sans-serif}
-#map{height:430px;background:#eee}
-.profiles{background:#fff;border:1px solid #d9d5cc;border-top:0}
-.profile-block{border-top:1px solid #d9d5cc}
-.profile-title{padding:10px 14px 4px;font-size:12px;font-weight:700}
-.profile{height:150px;position:relative}
-.profile svg{width:100%;height:100%;display:block}
-.tip{position:absolute;left:12px;top:6px;padding:4px 7px;background:#fff;border:1px solid #ddd;font-size:11px;pointer-events:none}
-@media(max-width:700px){
-  #map{height:350px}
-  .profile{height:135px}
-}
+html,body{margin:0;height:100%;font-family:Arial,Helvetica,sans-serif}
+#wrap{height:100%;display:flex;flex-direction:column}
+#map{flex:1;min-height:320px;background:#eee}
+#profile{height:190px;border-top:1px solid #d9d5cc;background:#fff;position:relative}
+#profile svg{width:100%;height:100%;display:block}
+.tip{position:absolute;left:12px;top:8px;padding:5px 8px;background:#fff;border:1px solid #ddd;font-size:12px;pointer-events:none}
+.leaflet-popup-content img{display:block;max-width:280px;max-height:300px}
+@media(max-width:700px){#profile{height:165px}}
 </style>
 </head>
 <body>
-
-<div id="map"></div>
-
-<div class="profiles">
-  <div class="profile-block">
-    <div class="profile-title">19. 12. 2025</div>
-    <div class="profile">
-      <svg id="svg0"></svg>
-      <div class="tip" id="tip0">Přejeď po profilu</div>
-    </div>
-  </div>
-
-  <div class="profile-block">
-    <div class="profile-title">20. 12. 2025</div>
-    <div class="profile">
-      <svg id="svg1"></svg>
-      <div class="tip" id="tip1">Přejeď po profilu</div>
-    </div>
-  </div>
-
-  <div class="profile-block">
-    <div class="profile-title">21. 12. 2025</div>
-    <div class="profile">
-      <svg id="svg2"></svg>
-      <div class="tip" id="tip2">Přejeď po profilu</div>
-    </div>
+<div id="wrap">
+  <div id="map"></div>
+  <div id="profile">
+    <svg id="profileSvg"></svg>
+    <div class="tip" id="tip">Přejeď po profilu</div>
   </div>
 </div>
 
@@ -56,103 +31,122 @@ html,body{margin:0;background:#f5f3ee;color:#111;font-family:Arial,Helvetica,san
 <script src="data/Fotky_2.js"></script>
 <script src="data/Fotky_podle_casu_3.js"></script>
 <script src="data/Videa_4.js"></script>
-<script src="data/profile_segments.js"></script>
+<script src="data/profile_data.js"></script>
 
 <script>
 const BUNNY = "https://cesty.b-cdn.net/2025_12_Dolomity/";
 const map = L.map("map");
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom:19,
-  attribution:"&copy; OpenStreetMap contributors"
+  maxZoom: 19,
+  attribution: "&copy; OpenStreetMap contributors"
 }).addTo(map);
 
+// Trasa přímo z qgis2web vrstvy.
 const routeLayer = L.geoJSON(json_track_1, {
-  style:{color:"#111",weight:4,opacity:.9}
+  style: {color:"#111", weight:4, opacity:.9}
 }).addTo(map);
 
-if(routeLayer.getBounds().isValid()){
-  map.fitBounds(routeLayer.getBounds(),{padding:[20,20]});
+if (routeLayer.getBounds().isValid()) {
+  map.fitBounds(routeLayer.getBounds(), {padding:[20,20]});
+} else {
+  map.setView([46.47, 11.75], 11);
 }
 
-function photoUrl(p){
-  if(p.photo_url && p.photo_url.startsWith("https://")) return p.photo_url;
-  if(p.bunny_file) return BUNNY + "FOTO/" + encodeURIComponent(p.bunny_file);
-  if(p.filename) return BUNNY + "FOTO/" + encodeURIComponent(p.filename);
+function photoUrl(p) {
+  if (p.photo_url && p.photo_url.startsWith("https://")) return p.photo_url;
+  if (p.bunny_file) return BUNNY + "FOTO/" + encodeURIComponent(p.bunny_file);
+  if (p.filename) return BUNNY + "FOTO/" + encodeURIComponent(p.filename);
   return "";
 }
 
-function addPhotoLayer(data){
-  if(!data || !data.features) return;
-  L.geoJSON(data,{
-    pointToLayer:(f,ll)=>L.circleMarker(ll,{
-      radius:5,color:"#111",weight:2,fillColor:"#fff",fillOpacity:1
+function addPhotoLayer(data) {
+  if (!data || !data.features) return;
+  L.geoJSON(data, {
+    pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+      radius:5, color:"#111", weight:2, fillColor:"#fff", fillOpacity:1
     }),
-    onEachFeature:(f,l)=>{
-      const p=f.properties||{};
-      const url=photoUrl(p);
-      if(!url) return;
-      l.bindPopup('<img src="'+url+'" style="max-width:280px;max-height:300px">');
+    onEachFeature: (f, layer) => {
+      const p = f.properties || {};
+      const url = photoUrl(p);
+      if (!url) return;
+      const name = p.filename || p.bunny_file || "";
+      layer.bindPopup(
+        '<a href="' + url + '" target="_blank" rel="noopener">' +
+        '<img src="' + url + '" alt="' + name.replace(/"/g,"&quot;") + '">' +
+        '</a>'
+      );
     }
   }).addTo(map);
 }
 
+// Fotky s GPS + fotky dopočítané podle času.
 addPhotoLayer(json_Fotky_2);
 addPhotoLayer(json_Fotky_podle_casu_3);
 
-const SEGMENTS = window.PROFILE_SEGMENTS || [];
-let dots = [null,null,null];
+// Výškový profil.
+const P = window.PROFILE_DATA || [];
+const BREAKS = window.ACTIVITY_BREAKS || [];
+const svg = document.getElementById("profileSvg");
+const tip = document.getElementById("tip");
+let dot = null;
 
-function drawProfile(i){
-  const P=SEGMENTS[i]||[];
-  if(!P.length) return;
+function drawProfile() {
+  if (!P.length) {
+    tip.textContent = "Profil není k dispozici";
+    return;
+  }
 
-  const svg=document.getElementById("svg"+i);
-  const tip=document.getElementById("tip"+i);
-  const w=svg.clientWidth,h=svg.clientHeight,pad=18;
-  const maxD=P[P.length-1][0];
-  const es=P.map(x=>x[1]);
-  const mn=Math.min(...es),mx=Math.max(...es);
+  const w = svg.clientWidth;
+  const h = svg.clientHeight;
+  const pad = 18;
+  const maxD = P[P.length - 1][0];
+  const elevations = P.map(p => p[1]);
+  const minE = Math.min(...elevations);
+  const maxE = Math.max(...elevations);
 
-  const X=d=>pad+(d/maxD)*(w-2*pad);
-  const Y=e=>h-pad-((e-mn)/Math.max(1,mx-mn))*(h-2*pad);
+  const X = d => pad + (d / maxD) * (w - 2*pad);
+  const Y = e => h - pad - ((e - minE) / Math.max(1, maxE-minE)) * (h - 2*pad);
 
-  const path=P.map((p,j)=>(j?"L":"M")+X(p[0]).toFixed(1)+" "+Y(p[1]).toFixed(1)).join(" ");
-  svg.innerHTML='<path d="'+path+'" fill="none" stroke="#111" stroke-width="2"/>';
+  const path = P.map((p,i) =>
+    (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1)
+  ).join(" ");
 
-  svg.onpointermove=e=>{
-    const r=svg.getBoundingClientRect();
-    let d=((e.clientX-r.left-pad)/(w-2*pad))*maxD;
-    d=Math.max(0,Math.min(maxD,d));
+  svg.innerHTML = '<path d="' + path + '" fill="none" stroke="#111" stroke-width="2"/>';
 
-    let lo=0,hi=P.length-1;
+  BREAKS.forEach(b => {
+    const x = X(b);
+    svg.innerHTML += '<line x1="'+x+'" y1="8" x2="'+x+'" y2="'+(h-8)+'" stroke="#999" stroke-dasharray="4 4"/>';
+  });
+
+  function move(e) {
+    const r = svg.getBoundingClientRect();
+    let d = ((e.clientX - r.left - pad) / (w - 2*pad)) * maxD;
+    d = Math.max(0, Math.min(maxD, d));
+
+    let lo=0, hi=P.length-1;
     while(lo<hi){
       const m=(lo+hi)>>1;
-      if(P[m][0]<d) lo=m+1;
-      else hi=m;
+      if(P[m][0] < d) lo=m+1; else hi=m;
     }
 
     const p=P[lo];
-    tip.textContent=p[0].toFixed(1).replace(".",",")+" km · "+Math.round(p[1])+" m";
+    tip.textContent = p[0].toFixed(1).replace(".",",") + " km · " + Math.round(p[1]) + " m";
 
-    if(!dots[i]){
-      dots[i]=L.circleMarker([p[2],p[3]],{
-        radius:7,color:"#fff",weight:2,fillColor:"#111",fillOpacity:1
+    if (!dot) {
+      dot = L.circleMarker([p[2],p[3]], {
+        radius:7, color:"#fff", weight:2, fillColor:"#111", fillOpacity:1
       }).addTo(map);
-    }else{
-      dots[i].setLatLng([p[2],p[3]]);
+    } else {
+      dot.setLatLng([p[2],p[3]]);
     }
-  };
+  }
+
+  svg.onpointermove = move;
 }
 
-function drawAll(){
-  drawProfile(0);
-  drawProfile(1);
-  drawProfile(2);
-}
-
-window.addEventListener("resize",drawAll);
-drawAll();
+window.addEventListener("resize", drawProfile);
+drawProfile();
 </script>
 </body>
 </html>
