@@ -53,11 +53,16 @@ if (routeLayer.getBounds().isValid()) {
   map.setView([46.47, 11.75], 11);
 }
 
+function cleanPhotoName(name) {
+  if (!name) return "";
+  const m = String(name).match(/(IMG_[^\\/]+)$/i);
+  return m ? m[1] : String(name).split(/[\\/]/).pop();
+}
+
 function photoUrl(p) {
-  if (p.photo_url && p.photo_url.startsWith("https://")) return p.photo_url;
-  if (p.bunny_file) return BUNNY + "FOTO/" + encodeURIComponent(p.bunny_file);
-  if (p.filename) return BUNNY + "FOTO/" + encodeURIComponent(p.filename);
-  return "";
+  const raw = p.filename || p.bunny_file || "";
+  const name = cleanPhotoName(raw);
+  return name ? BUNNY + "FOTO/" + encodeURIComponent(name) : "";
 }
 
 function addPhotoLayer(data) {
