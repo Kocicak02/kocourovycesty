@@ -11,6 +11,7 @@ permissions:
 jobs:
   update-site:
     runs-on: ubuntu-latest
+
     steps:
       - name: Stahnout repozitar
         uses: actions/checkout@v4
@@ -25,11 +26,15 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add index.html archiv.html generated-routes.js
           git add -- '*/media.js'
+          git add -- '*/detail.html'
+
           if git diff --cached --quiet; then
             echo "Web je aktualni."
             exit 0
           fi
+
           git commit -m "Automaticka aktualizace webu"
           git push
