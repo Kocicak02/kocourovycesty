@@ -1,9 +1,186 @@
-<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mapa — Běžky</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><style>*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:Arial,sans-serif}#w{height:100%;display:flex;flex-direction:column}#map{flex:1;min-height:300px}#p{height:190px;border-top:1px solid #d9d5cc;background:#fff;position:relative}svg{width:100%;height:100%;display:block}.tip{position:absolute;top:8px;left:12px;background:#fff;padding:5px 8px;font-size:12px;border:1px solid #ddd;pointer-events:none}@media(max-width:700px){#p{height:165px}}</style></head>
-<body><div id="w"><div id="map"></div><div id="p"><svg id="svg"></svg><div class="tip" id="tip">Přejeď po profilu</div></div></div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="data/profile_data.js"></script><script>
-const P=window.PROFILE_DATA||[],map=L.map("map");L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap contributors"}).addTo(map);
-if(P.length){const l=L.polyline(P.map(x=>[x[2],x[3]]),{color:"#111",weight:4,opacity:.9}).addTo(map);map.fitBounds(l.getBounds(),{padding:[20,20]})}
-const s=document.getElementById("svg"),t=document.getElementById("tip");let m;
-function draw(){if(!P.length){t.textContent="Profil není k dispozici";return}const w=s.clientWidth,h=s.clientHeight,a=18,D=P.at(-1)[0],es=P.map(x=>x[1]),mn=Math.min(...es),mx=Math.max(...es),X=d=>a+d/D*(w-2*a),Y=e=>h-a-(e-mn)/Math.max(1,mx-mn)*(h-2*a);s.innerHTML='<path d="'+P.map((q,i)=>(i?"L":"M")+X(q[0])+" "+Y(q[1])).join(" ")+'" fill="none" stroke="#111" stroke-width="2"/>';s.onpointermove=e=>{const r=s.getBoundingClientRect();let d=Math.max(0,Math.min(D,(e.clientX-r.left-a)/(w-2*a)*D)),lo=0,hi=P.length-1;while(lo<hi){let z=(lo+hi)>>1;P[z][0]<d?lo=z+1:hi=z}const q=P[lo];t.textContent=q[0].toFixed(1).replace(".",",")+" km · "+Math.round(q[1])+" m";m?m.setLatLng([q[2],q[3]]):m=L.circleMarker([q[2],q[3]],{radius:7,color:"#fff",weight:2,fillColor:"#111",fillOpacity:1}).addTo(map)}}addEventListener("resize",draw);draw();
-</script></body></html>
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mapa — Běžky</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  height:100%;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#fff;
+}
+#wrap{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+}
+#map{
+  flex:1;
+  min-height:320px;
+}
+#profile{
+  height:190px;
+  position:relative;
+  background:#fff;
+  border-top:1px solid #d9d5cc;
+}
+#profile svg{
+  width:100%;
+  height:100%;
+  display:block;
+}
+.tip{
+  position:absolute;
+  top:8px;
+  left:12px;
+  padding:5px 8px;
+  background:#fff;
+  border:1px solid #d9d5cc;
+  font-size:12px;
+  pointer-events:none;
+}
+@media(max-width:700px){
+  #profile{height:165px}
+}
+</style>
+</head>
+
+<body>
+<div id="wrap">
+  <div id="map"></div>
+
+  <div id="profile">
+    <svg id="profileSvg"></svg>
+    <div class="tip" id="tip">Přejeď po profilu</div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="data/tracks_1.js"></script>
+<script src="data/profile_data.js"></script>
+
+<script>
+const map = L.map("map");
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom:19,
+  attribution:"&copy; OpenStreetMap contributors"
+}).addTo(map);
+
+// Trasa přesně z QGIS/qgis2web exportu.
+const route = L.geoJSON(json_tracks_1, {
+  style:{
+    color:"#111",
+    weight:4,
+    opacity:.9
+  }
+}).addTo(map);
+
+if(route.getBounds().isValid()){
+  map.fitBounds(route.getBounds(), {padding:[20,20]});
+}else{
+  map.setView([49.02,13.58], 12);
+}
+
+// Profil z FIT aktivity.
+const PROFILE = window.PROFILE_DATA || {};
+const P = Array.isArray(PROFILE.points) ? PROFILE.points : [];
+
+const svg = document.getElementById("profileSvg");
+const tip = document.getElementById("tip");
+
+let marker = null;
+
+function drawProfile(){
+  if(!P.length){
+    tip.textContent = "Profil není k dispozici";
+    return;
+  }
+
+  const w = svg.clientWidth;
+  const h = svg.clientHeight;
+  const pad = 18;
+
+  const maxD = P[P.length - 1].d;
+  const elevations = P.map(p => p.ele);
+  const minE = Math.min(...elevations);
+  const maxE = Math.max(...elevations);
+
+  const X = d =>
+    pad + (d / maxD) * (w - 2 * pad);
+
+  const Y = e =>
+    h - pad -
+    ((e - minE) / Math.max(1, maxE - minE)) *
+    (h - 2 * pad);
+
+  const path = P.map((p,i) =>
+    (i ? "L" : "M") +
+    X(p.d).toFixed(1) + " " +
+    Y(p.ele).toFixed(1)
+  ).join(" ");
+
+  svg.innerHTML =
+    '<path d="' + path +
+    '" fill="none" stroke="#111" stroke-width="2"/>';
+
+  function move(clientX){
+    const r = svg.getBoundingClientRect();
+
+    let d =
+      ((clientX - r.left - pad) /
+      (w - 2 * pad)) * maxD;
+
+    d = Math.max(0, Math.min(maxD, d));
+
+    let lo = 0;
+    let hi = P.length - 1;
+
+    while(lo < hi){
+      const mid = (lo + hi) >> 1;
+      if(P[mid].d < d) lo = mid + 1;
+      else hi = mid;
+    }
+
+    const p = P[lo];
+
+    tip.textContent =
+      p.d.toFixed(1).replace(".", ",") +
+      " km · " +
+      Math.round(p.ele) +
+      " m";
+
+    if(!marker){
+      marker = L.circleMarker([p.lat,p.lon], {
+        radius:7,
+        color:"#fff",
+        weight:2,
+        fillColor:"#111",
+        fillOpacity:1
+      }).addTo(map);
+    }else{
+      marker.setLatLng([p.lat,p.lon]);
+    }
+  }
+
+  svg.onpointermove = e => move(e.clientX);
+
+  svg.ontouchmove = e => {
+    if(e.touches && e.touches[0]){
+      move(e.touches[0].clientX);
+    }
+  };
+}
+
+window.addEventListener("resize", drawProfile);
+drawProfile();
+</script>
+
+</body>
+</html>
