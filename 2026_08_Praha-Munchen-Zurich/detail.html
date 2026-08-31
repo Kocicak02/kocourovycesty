@@ -449,6 +449,23 @@ footer{
 
 </main>
 
+
+<!-- TRIP-NAV:START -->
+<style>
+.trip-nav{max-width:1400px;margin:58px auto 0;padding:26px 42px 8px;border-top:1px solid #d9d5cc;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.trip-nav-link{display:flex;flex-direction:column;gap:7px;min-width:0;color:#111;text-decoration:none;padding:16px 0}
+.trip-nav-next{text-align:right;align-items:flex-end}
+.trip-nav-label{color:#777;font:400 10px Arial,Helvetica,sans-serif;letter-spacing:.10em;text-transform:uppercase}
+.trip-nav-link strong{font:700 16px Arial,Helvetica,sans-serif;line-height:1.25}
+.trip-nav-link:hover strong{text-decoration:underline}
+@media(max-width:700px){.trip-nav{padding:22px 20px 6px;margin-top:42px;gap:12px}.trip-nav-link strong{font-size:14px}}
+</style>
+<nav class="trip-nav" aria-label="Další cesty">
+<a class="trip-nav-link trip-nav-prev" href="/2026_08_Tejn-Praha/detail.html"><span class="trip-nav-label">← Předchozí cesta</span><strong>Z Tejna do Prahy oklikou</strong></a>
+<a class="trip-nav-link trip-nav-next" href="/2026_07_Dolomity/detail.html"><span class="trip-nav-label">Další cesta →</span><strong>Dolomity</strong></a>
+</nav>
+<!-- TRIP-NAV:END -->
+
 <footer>Kocourovy cesty</footer>
 
 <script src="media.js"></script>
@@ -593,6 +610,12 @@ function toggleVideos(){
   }
 }
 </script>
+
+
+
+
+
+
 
 
 
@@ -969,6 +992,28 @@ function toggleVideos(){
   next.addEventListener('click',e=>{e.stopPropagation();index++;render()});
   close.addEventListener('click',hide);
   box.addEventListener('click',e=>{if(e.target===box)hide()});
+
+  // SWIPE NA MOBILU / TABLETU
+  let touchStartX=null;
+  let touchStartY=null;
+
+  box.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1)return;
+    touchStartX=e.touches[0].clientX;
+    touchStartY=e.touches[0].clientY;
+  },{passive:true});
+
+  box.addEventListener('touchend',e=>{
+    if(touchStartX===null || !e.changedTouches.length)return;
+    const dx=e.changedTouches[0].clientX-touchStartX;
+    const dy=e.changedTouches[0].clientY-touchStartY;
+    touchStartX=null;
+    touchStartY=null;
+    if(Math.abs(dx)<45 || Math.abs(dx)<=Math.abs(dy))return;
+    if(dx<0) index++;
+    else index--;
+    render();
+  },{passive:true});
 
   document.addEventListener('keydown',e=>{
     if(!box.classList.contains('open'))return;
