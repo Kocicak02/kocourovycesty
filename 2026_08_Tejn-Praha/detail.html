@@ -113,6 +113,12 @@ photosTile.onclick=()=>toggle("photosPanel","photosTile",buildPhotos);videosTile
 
 
 
+
+
+
+
+
+
 <!-- FLOATING-MEDIA-CLOSE:START -->
 <style>
 #floatingMediaClose{
@@ -154,20 +160,20 @@ photosTile.onclick=()=>toggle("photosPanel","photosTile",buildPhotos);videosTile
   if(!btn)return;
 
   function state(){
-    const photos=document.getElementById('photosPanel');
-    const videos=document.getElementById('videosPanel');
+    const photos=document.getElementById('photosPanel') || document.getElementById('photoPanel');
+    const videos=document.getElementById('videosPanel') || document.getElementById('videoPanel');
 
     if(photos && photos.classList.contains('open')){
       return {
         panel:photos,
-        tile:document.getElementById('photosTile')
+        tile:document.getElementById('photosTile') || document.querySelector('.media-tile[onclick*="togglePhotos"]')
       };
     }
 
     if(videos && videos.classList.contains('open')){
       return {
         panel:videos,
-        tile:document.getElementById('videosTile')
+        tile:document.getElementById('videosTile') || document.querySelector('.media-tile[onclick*="toggleVideos"]')
       };
     }
 
@@ -325,17 +331,56 @@ photosTile.onclick=()=>toggle("photosPanel","photosTile",buildPhotos);videosTile
   let index=0;
   let oldOverflow='';
 
+  function photoPanels(){
+    const selectors=[
+      '#photosPanel',
+      '#photoPanel',
+      '#photoGallery',
+      '.gallery'
+    ];
+
+    const found=[];
+    selectors.forEach(sel=>{
+      document.querySelectorAll(sel).forEach(el=>{
+        // Nebereme galerie uvnitr mapy/iframe apod.
+        if(el.closest('#photoLightbox'))return;
+        if(!found.includes(el))found.push(el);
+      });
+    });
+    return found;
+  }
+
   function photoItems(){
-    const panel=document.getElementById('photosPanel');
-    if(!panel)return [];
     const result=[];
-    panel.querySelectorAll('img').forEach(img=>{
-      const a=img.closest('a');
-      const url=(a&&a.href)||img.currentSrc||img.src;
-      if(!url)return;
-      if(!result.some(x=>x.url===url))result.push({url:url,alt:img.alt||''});
+    photoPanels().forEach(panel=>{
+      panel.querySelectorAll('img').forEach(img=>{
+        const a=img.closest('a');
+        const url=(a&&a.href)||img.currentSrc||img.src;
+        if(!url)return;
+        if(!result.some(x=>x.url===url)){
+          result.push({url:url,alt:img.alt||''});
+        }
+      });
     });
     return result;
+  }
+
+  function clickedGalleryImage(target){
+    const img=target.closest('img');
+    if(!img)return null;
+
+    // Podpora novych i starsich detailu:
+    // photosPanel, photoPanel, photoGallery nebo .photo-card/.gallery.
+    const inPhotoArea=
+      img.closest('#photosPanel') ||
+      img.closest('#photoPanel') ||
+      img.closest('#photoGallery') ||
+      img.closest('.photo-card') ||
+      img.closest('.gallery');
+
+    if(!inPhotoArea)return null;
+    if(img.closest('#photoLightbox'))return null;
+    return img;
   }
 
   function render(){
@@ -373,12 +418,13 @@ photosTile.onclick=()=>toggle("photosPanel","photosTile",buildPhotos);videosTile
   }
 
   document.addEventListener('click',e=>{
-    const panel=e.target.closest('#photosPanel');
-    const img=e.target.closest('#photosPanel img');
-    if(!panel||!img)return;
+    const img=clickedGalleryImage(e.target);
+    if(!img)return;
+
     const a=img.closest('a');
     const url=(a&&a.href)||img.currentSrc||img.src;
     if(!url)return;
+
     e.preventDefault();
     e.stopPropagation();
     openAt(url);
