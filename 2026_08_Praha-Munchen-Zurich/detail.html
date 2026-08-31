@@ -594,5 +594,117 @@ function toggleVideos(){
 }
 </script>
 
+
+<!-- FLOATING-MEDIA-CLOSE:START -->
+<style>
+#floatingMediaClose{
+  position:fixed;
+  right:24px;
+  bottom:24px;
+  z-index:99999;
+  display:none;
+  align-items:center;
+  gap:8px;
+  border:1px solid #111;
+  background:#111;
+  color:#f5f3ee;
+  padding:12px 16px;
+  font:700 11px Arial,Helvetica,sans-serif;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+  cursor:pointer;
+  box-shadow:0 5px 20px rgba(0,0,0,.18);
+}
+#floatingMediaClose.visible{display:flex}
+#floatingMediaClose:hover{background:#f5f3ee;color:#111}
+@media(max-width:600px){
+  #floatingMediaClose{
+    right:14px;
+    bottom:14px;
+    padding:11px 14px;
+  }
+}
+</style>
+
+<button id="floatingMediaClose" type="button" aria-label="Sbalit otevřená média">
+  ↑ Sbalit
+</button>
+
+<script>
+(()=>{
+  const btn=document.getElementById('floatingMediaClose');
+  if(!btn)return;
+
+  function state(){
+    const photos=document.getElementById('photosPanel');
+    const videos=document.getElementById('videosPanel');
+
+    if(photos && photos.classList.contains('open')){
+      return {
+        panel:photos,
+        tile:document.getElementById('photosTile')
+      };
+    }
+
+    if(videos && videos.classList.contains('open')){
+      return {
+        panel:videos,
+        tile:document.getElementById('videosTile')
+      };
+    }
+
+    const generic=document.querySelector('.media-panel.open');
+    if(generic){
+      return {
+        panel:generic,
+        tile:null
+      };
+    }
+
+    return null;
+  }
+
+  function refresh(){
+    btn.classList.toggle('visible',!!state());
+  }
+
+  btn.addEventListener('click',()=>{
+    const s=state();
+    if(!s)return;
+
+    const target=s.tile || s.panel;
+
+    // Kdyz existuje puvodni dlazdice Fotky/Videa,
+    // pouzijeme jeji vlastni click handler, aby vse zustalo synchronizovane.
+    if(s.tile){
+      s.tile.click();
+    }else{
+      s.panel.classList.remove('open');
+    }
+
+    btn.classList.remove('visible');
+
+    setTimeout(()=>{
+      target.scrollIntoView({
+        behavior:'smooth',
+        block:'center'
+      });
+    },40);
+  });
+
+  // Sleduje rozbaleni/sbaleni bez ohledu na to, jaky detail ho provedl.
+  const observer=new MutationObserver(refresh);
+  observer.observe(document.body,{
+    subtree:true,
+    attributes:true,
+    attributeFilter:['class']
+  });
+
+  document.addEventListener('click',()=>setTimeout(refresh,0));
+  refresh();
+})();
+</script>
+<!-- FLOATING-MEDIA-CLOSE:END -->
+
 </body>
 </html>
