@@ -1,0 +1,31 @@
+// Automaticky generovano z Bunny Storage.
+// Neupravovat rucne.
+
+window.MEDIA_PHOTOS = [
+  "IMG_2873.JPEG",
+  "IMG_2874.JPEG",
+  "IMG_2875.JPEG",
+  "IMG_2876.JPEG",
+  "IMG_2877.JPEG",
+  "IMG_2878.JPEG",
+  "IMG_2879.JPEG",
+  "IMG_2880.JPEG",
+  "IMG_2885.JPEG",
+  "IMG_2889.JPEG",
+  "IMG_2890.JPEG",
+  "IMG_2891.JPEG",
+  "IMG_2892.JPEG",
+  "IMG_2893.JPEG",
+  "IMG_2894.JPEG",
+  "IMG_2895.JPEG",
+  "IMG_2896.JPEG",
+  "IMG_2897.JPEG",
+  "IMG_2898.JPEG",
+  "IMG_2899.JPEG",
+  "IMG_2900.JPEG",
+  "IMG_2901.JPEG"
+];
+
+window.MEDIA_VIDEOS = [
+  "IMG_2888.MP4"
+];
