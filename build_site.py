@@ -393,6 +393,28 @@ LIGHTBOX_BLOCK = r"""
   close.addEventListener('click',hide);
   box.addEventListener('click',e=>{if(e.target===box)hide()});
 
+  // SWIPE NA MOBILU / TABLETU
+  let touchStartX=null;
+  let touchStartY=null;
+
+  box.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1)return;
+    touchStartX=e.touches[0].clientX;
+    touchStartY=e.touches[0].clientY;
+  },{passive:true});
+
+  box.addEventListener('touchend',e=>{
+    if(touchStartX===null || !e.changedTouches.length)return;
+    const dx=e.changedTouches[0].clientX-touchStartX;
+    const dy=e.changedTouches[0].clientY-touchStartY;
+    touchStartX=null;
+    touchStartY=null;
+    if(Math.abs(dx)<45 || Math.abs(dx)<=Math.abs(dy))return;
+    if(dx<0) index++;
+    else index--;
+    render();
+  },{passive:true});
+
   document.addEventListener('keydown',e=>{
     if(!box.classList.contains('open'))return;
     if(e.key==='Escape'){e.preventDefault();hide()}
@@ -515,3 +537,88 @@ for c in cards:
 archive='''<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Archiv — Kocourovy cesty</title><style>:root{--bg:#f5f3ee;--text:#111;--muted:#777;--line:#d9d5cc}*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}a{color:inherit;text-decoration:none}header{display:flex;align-items:center;justify-content:space-between;padding:28px 42px;border-bottom:1px solid var(--line)}.brand{font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}nav{font-size:13px;text-transform:uppercase;letter-spacing:.08em}main{max-width:1400px;margin:auto;padding:42px}h1{margin:0 0 36px;font-size:14px;text-transform:uppercase;letter-spacing:.12em}.trip{display:grid;grid-template-columns:120px 1fr auto;gap:25px;align-items:center;padding:25px 0;border-top:1px solid var(--line)}.trip:last-child{border-bottom:1px solid var(--line)}.date{color:var(--muted);font-size:12px}.trip-type{margin-bottom:5px;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.09em}.name{font-size:24px;font-weight:700}.arrow{font-size:20px}@media(max-width:700px){header{padding:20px}main{padding:24px 20px}.trip{grid-template-columns:1fr auto}.date{grid-column:1/-1}}</style></head><body><header><a class="brand" href="/">Kocourovy cesty</a><nav><a href="/archiv.html">Archiv</a></nav></header><main><h1>Archiv cest</h1>'''+''.join(rows)+'''</main></body></html>'''
 Path('archiv.html').write_text(archive,encoding='utf-8')
 print(f'Hotovo: {len(cards)} aktivit, {len(routes)} aktivit na mape.')
+
+
+# PREDCHOZI / DALSI CESTA VE VSECH DETAIL.HTML
+TRIP_NAV_START = '<!-- TRIP-NAV:START -->'
+TRIP_NAV_END = '<!-- TRIP-NAV:END -->'
+
+def remove_trip_nav(html):
+    if TRIP_NAV_START in html and TRIP_NAV_END in html:
+        return html.split(TRIP_NAV_START,1)[0] + html.split(TRIP_NAV_END,1)[1]
+    return html
+
+def add_trip_navigation():
+    activities=[]
+    for card in Path('.').glob('*/card.json'):
+        try:
+            data=json.loads(card.read_text(encoding='utf-8'))
+        except Exception:
+            continue
+        detail=card.parent/'detail.html'
+        if not detail.exists():
+            continue
+        activities.append({
+            'folder':card.parent.name,
+            'title':str(data.get('title') or card.parent.name),
+        })
+
+    activities.sort(key=lambda x:x['folder'], reverse=True)
+
+    for i,item in enumerate(activities):
+        path=Path(item['folder'])/'detail.html'
+        html=remove_trip_nav(path.read_text(encoding='utf-8',errors='ignore'))
+
+        newer=activities[i-1] if i>0 else None
+        older=activities[i+1] if i+1<len(activities) else None
+
+        links=[]
+        if newer:
+            links.append(
+                '<a class="trip-nav-link trip-nav-prev" href="/{}/detail.html">'
+                '<span class="trip-nav-label">← Předchozí cesta</span>'
+                '<strong>{}</strong></a>'.format(
+                    escape(newer['folder'],quote=True), escape(newer['title'])
+                )
+            )
+        else:
+            links.append('<div class="trip-nav-spacer"></div>')
+
+        if older:
+            links.append(
+                '<a class="trip-nav-link trip-nav-next" href="/{}/detail.html">'
+                '<span class="trip-nav-label">Další cesta →</span>'
+                '<strong>{}</strong></a>'.format(
+                    escape(older['folder'],quote=True), escape(older['title'])
+                )
+            )
+        else:
+            links.append('<div class="trip-nav-spacer"></div>')
+
+        block = r"""
+<!-- TRIP-NAV:START -->
+<style>
+.trip-nav{max-width:1400px;margin:58px auto 0;padding:26px 42px 8px;border-top:1px solid #d9d5cc;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.trip-nav-link{display:flex;flex-direction:column;gap:7px;min-width:0;color:#111;text-decoration:none;padding:16px 0}
+.trip-nav-next{text-align:right;align-items:flex-end}
+.trip-nav-label{color:#777;font:400 10px Arial,Helvetica,sans-serif;letter-spacing:.10em;text-transform:uppercase}
+.trip-nav-link strong{font:700 16px Arial,Helvetica,sans-serif;line-height:1.25}
+.trip-nav-link:hover strong{text-decoration:underline}
+@media(max-width:700px){.trip-nav{padding:22px 20px 6px;margin-top:42px;gap:12px}.trip-nav-link strong{font-size:14px}}
+</style>
+<nav class="trip-nav" aria-label="Další cesty">
+""" + '\n'.join(links) + r"""
+</nav>
+<!-- TRIP-NAV:END -->
+"""
+        footer_pos=html.lower().find('<footer')
+        if footer_pos!=-1:
+            html=html[:footer_pos]+block+'\n'+html[footer_pos:]
+        else:
+            body_pos=html.lower().find('</body>')
+            html=html[:body_pos]+block+'\n'+html[body_pos:] if body_pos!=-1 else html+block
+
+        path.write_text(html,encoding='utf-8')
+        print('Predchozi/dalsi:',path)
+
+add_trip_navigation()
