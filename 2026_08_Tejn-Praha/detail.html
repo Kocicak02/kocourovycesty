@@ -119,6 +119,12 @@ photosTile.onclick=()=>toggle("photosPanel","photosTile",buildPhotos);videosTile
 
 
 
+
+
+
+
+
+
 <!-- FLOATING-MEDIA-CLOSE:START -->
 <style>
 #floatingMediaClose{
@@ -331,55 +337,60 @@ photosTile.onclick=()=>toggle("photosPanel","photosTile",buildPhotos);videosTile
   let index=0;
   let oldOverflow='';
 
-  function photoPanels(){
-    const selectors=[
-      '#photosPanel',
-      '#photoPanel',
-      '#photoGallery',
-      '.gallery'
-    ];
+  function imageUrlFromAnchor(a,img){
+    if(a && a.href) return a.href;
+    return img.currentSrc || img.src || '';
+  }
 
-    const found=[];
-    selectors.forEach(sel=>{
-      document.querySelectorAll(sel).forEach(el=>{
-        // Nebereme galerie uvnitr mapy/iframe apod.
-        if(el.closest('#photoLightbox'))return;
-        if(!found.includes(el))found.push(el);
-      });
-    });
-    return found;
+  function looksLikePhotoUrl(url){
+    if(!url)return false;
+    try{
+      const u=new URL(url,location.href);
+      const p=u.pathname.toLowerCase();
+      return /\.(jpe?g|png|webp|gif|avif|heic|heif)$/i.test(p);
+    }catch(e){
+      return /\.(jpe?g|png|webp|gif|avif|heic|heif)(?:$|[?#])/i.test(url);
+    }
   }
 
   function photoItems(){
     const result=[];
-    photoPanels().forEach(panel=>{
-      panel.querySelectorAll('img').forEach(img=>{
-        const a=img.closest('a');
-        const url=(a&&a.href)||img.currentSrc||img.src;
-        if(!url)return;
-        if(!result.some(x=>x.url===url)){
-          result.push({url:url,alt:img.alt||''});
-        }
-      });
+
+    // Schvalne bez zavislosti na ID galerii.
+    // Bere vsechny odkazy s obrazkem, ktere skutecne vedou na fotku.
+    document.querySelectorAll('a[href] img').forEach(img=>{
+      if(img.closest('#photoLightbox'))return;
+      const a=img.closest('a[href]');
+      if(!a)return;
+
+      const url=imageUrlFromAnchor(a,img);
+      if(!looksLikePhotoUrl(url))return;
+
+      if(!result.some(x=>x.url===url)){
+        result.push({
+          url:url,
+          alt:img.alt||''
+        });
+      }
     });
+
     return result;
   }
 
   function clickedGalleryImage(target){
     const img=target.closest('img');
     if(!img)return null;
-
-    // Podpora novych i starsich detailu:
-    // photosPanel, photoPanel, photoGallery nebo .photo-card/.gallery.
-    const inPhotoArea=
-      img.closest('#photosPanel') ||
-      img.closest('#photoPanel') ||
-      img.closest('#photoGallery') ||
-      img.closest('.photo-card') ||
-      img.closest('.gallery');
-
-    if(!inPhotoArea)return null;
     if(img.closest('#photoLightbox'))return null;
+
+    const a=img.closest('a[href]');
+    if(!a)return null;
+
+    const url=imageUrlFromAnchor(a,img);
+    if(!looksLikePhotoUrl(url))return null;
+
+    // Nechceme chytat obrazky v hlavicce / navigaci, pokud by tam nekdy byly.
+    if(img.closest('header,nav'))return null;
+
     return img;
   }
 
@@ -421,8 +432,8 @@ photosTile.onclick=()=>toggle("photosPanel","photosTile",buildPhotos);videosTile
     const img=clickedGalleryImage(e.target);
     if(!img)return;
 
-    const a=img.closest('a');
-    const url=(a&&a.href)||img.currentSrc||img.src;
+    const a=img.closest('a[href]');
+    const url=imageUrlFromAnchor(a,img);
     if(!url)return;
 
     e.preventDefault();
