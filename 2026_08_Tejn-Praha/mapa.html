@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Z Tejna do Prahy oklikou – mapa</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+html,body{margin:0;height:100%;font-family:Arial,Helvetica,sans-serif;background:#f5f3ee;color:#111}
+.wrap{height:100%;display:flex;flex-direction:column}
+#map{flex:1;min-height:520px;background:#e9e7e0}
+.info{padding:11px 15px;border-top:1px solid #d9d5cc;background:#f5f3ee;font-size:12px;color:#777;display:flex;gap:18px;flex-wrap:wrap}
+.info strong{color:#111}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#f5f3ee;color:#111}
+.leaflet-popup-content{margin:12px;width:260px!important}
+.media-popup img,.media-popup video{display:block;width:100%;max-height:260px;object-fit:contain;background:#111}
+.media-popup .name{margin-top:8px;font-size:12px;overflow-wrap:anywhere}
+.media-popup .time{margin-top:4px;color:#777;font-size:11px}
+.photo-marker,.video-marker{width:18px;height:18px;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,.35)}
+.photo-marker{background:#111}
+.video-marker{background:#777}
+@media(max-width:600px){#map{min-height:480px}.info{font-size:11px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="map"></div>
+  <div class="info">
+    <span><strong>Z Tejna do Prahy oklikou</strong></span>
+    <span>2 cyklistické aktivity</span>
+    <span id="photoInfo">Fotky: –</span>
+    <span id="videoInfo">Videa: –</span>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="data/tracks_1.js"></script>
+<script src="data/tracks_2.js"></script>
+<script src="data/Fotky_podle_casu_3.js"></script>
+<script src="data/Videa_4.js"></script>
+<script>
+const map=L.map('map',{zoomControl:true});
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  maxZoom:19,
+  attribution:'&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+const bounds=L.latLngBounds();
+const routeGroup=L.featureGroup().addTo(map);
+
+function addRoute(fc){
+  if(!fc||!fc.features)return;
+  L.geoJSON(fc,{
+    style:{color:'#111',weight:4,opacity:.9},
+    onEachFeature:(feature,layer)=>{
+      const n=feature?.properties?.name;
+      if(n) layer.bindTooltip(n,{sticky:true});
+      layer.on('mouseover',()=>routeGroup.eachLayer(l=>l.setStyle&&l.setStyle({weight:6,opacity:1})));
+      layer.on('mouseout',()=>routeGroup.eachLayer(l=>l.setStyle&&l.setStyle({weight:4,opacity:.9})));
+    }
+  }).eachLayer(l=>{
+    routeGroup.addLayer(l);
+    if(l.getBounds) bounds.extend(l.getBounds());
+  });
+}
+addRoute(json_tracks_1);
+addRoute(json_tracks_2);
+
+function markerIcon(cls){
+  return L.divIcon({className:'',html:`<div class="${cls}"></div>`,iconSize:[18,18],iconAnchor:[9,9],popupAnchor:[0,-9]});
+}
+
+const photos=(json_Fotky_podle_casu_3?.features)||[];
+photos.forEach(f=>{
+  if(!f.geometry||f.geometry.type!=='Point')return;
+  const [lon,lat]=f.geometry.coordinates;
+  const p=f.properties||{};
+  const url=p.photo_url||'';
+  const m=L.marker([lat,lon],{icon:markerIcon('photo-marker')}).addTo(map);
+  m.bindPopup(`<div class="media-popup"><a href="${url}" target="_blank" rel="noopener"><img loading="lazy" src="${url}" alt=""></a><div class="name">${p.filename||''}</div><div class="time">${p.photo_time||''}</div></div>`,{maxWidth:300});
+  bounds.extend([lat,lon]);
+});
+
+document.getElementById('photoInfo').textContent=`Fotky: ${photos.length}`;
+
+const videos=(json_Videa_4?.features)||[];
+videos.forEach(f=>{
+  if(!f.geometry||f.geometry.type!=='Point')return;
+  const [lon,lat]=f.geometry.coordinates;
+  const p=f.properties||{};
+  const url=p.video_url||'';
+  const m=L.marker([lat,lon],{icon:markerIcon('video-marker')}).addTo(map);
+  m.bindPopup(`<div class="media-popup"><video controls preload="none" src="${url}"></video><div class="name">${p.filename||''}</div><div class="time">${p.video_time||''}</div></div>`,{maxWidth:300});
+  bounds.extend([lat,lon]);
+});
+
+document.getElementById('videoInfo').textContent=`Videa: ${videos.length}`;
+
+if(bounds.isValid()) map.fitBounds(bounds.pad(.05));
+else map.setView([49.8,14.2],8);
+</script>
+</body>
+</html>
