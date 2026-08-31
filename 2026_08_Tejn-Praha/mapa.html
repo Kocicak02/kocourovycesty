@@ -19,12 +19,23 @@ html,body{margin:0;height:100%;font-family:Arial,Helvetica,sans-serif;background
 .photo-marker,.video-marker{width:18px;height:18px;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,.35)}
 .photo-marker{background:#111}
 .video-marker{background:#777}
-@media(max-width:600px){#map{min-height:480px}.info{font-size:11px}}
+.profile-wrap{height:225px;padding:12px 16px 8px;border-top:1px solid #d9d5cc;background:#f5f3ee}
+.profile-head{height:24px;display:flex;justify-content:space-between;font-size:12px;color:#777}
+.profile-head strong{color:#111;text-transform:uppercase;letter-spacing:.08em;font-size:11px}
+#profileCanvas{display:block;width:100%;height:175px}
+@media(max-width:600px){#map{min-height:390px}.profile-wrap{height:190px}.info{font-size:11px}#profileCanvas{height:145px}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div id="map"></div>
+  <div class="profile-wrap">
+    <div class="profile-head">
+      <strong>Výškový profil</strong>
+      <span id="profileHover">Přejeď po profilu</span>
+    </div>
+    <canvas id="profileCanvas"></canvas>
+  </div>
   <div class="info">
     <span><strong>Z Tejna do Prahy oklikou</strong></span>
     <span>2 cyklistické aktivity</span>
@@ -38,6 +49,7 @@ html,body{margin:0;height:100%;font-family:Arial,Helvetica,sans-serif;background
 <script src="data/tracks_2.js"></script>
 <script src="data/Fotky_podle_casu_3.js"></script>
 <script src="data/Videa_4.js"></script>
+<script src="data/profile_data.js"></script>
 <script>
 const map=L.map('map',{zoomControl:true});
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
@@ -95,6 +107,148 @@ videos.forEach(f=>{
 });
 
 document.getElementById('videoInfo').textContent=`Videa: ${videos.length}`;
+
+
+const profileData=window.ELEVATION_PROFILE||[];
+const activityBreaks=window.ACTIVITY_BREAKS||[];
+const canvas=document.getElementById('profileCanvas');
+const ctx=canvas.getContext('2d');
+let profileMarker=null;
+
+function drawProfile(){
+  if(!profileData.length)return;
+
+  const dpr=window.devicePixelRatio||1;
+  const rect=canvas.getBoundingClientRect();
+  canvas.width=Math.round(rect.width*dpr);
+  canvas.height=Math.round(rect.height*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+
+  const W=rect.width,H=rect.height;
+  const pad={l:55,r:15,t:10,b:28};
+  const pw=W-pad.l-pad.r;
+  const ph=H-pad.t-pad.b;
+  const maxD=profileData[profileData.length-1][0];
+
+  let minE=Math.min(...profileData.map(p=>p[1]));
+  let maxE=Math.max(...profileData.map(p=>p[1]));
+  minE=Math.floor(minE/50)*50;
+  maxE=Math.ceil(maxE/50)*50;
+  if(maxE===minE)maxE=minE+50;
+
+  const x=d=>pad.l+(d/maxD)*pw;
+  const y=e=>pad.t+((maxE-e)/(maxE-minE))*ph;
+
+  ctx.clearRect(0,0,W,H);
+  ctx.font='10px Arial';
+  ctx.fillStyle='#777';
+  ctx.strokeStyle='#d9d5cc';
+  ctx.lineWidth=1;
+
+  for(let e=minE;e<=maxE;e+=50){
+    const yy=y(e);
+    ctx.beginPath();
+    ctx.moveTo(pad.l,yy);
+    ctx.lineTo(W-pad.r,yy);
+    ctx.stroke();
+    ctx.textAlign='right';
+    ctx.textBaseline='middle';
+    ctx.fillText(e+' m',pad.l-7,yy);
+  }
+
+  const xStep=maxD>150?25:maxD>75?10:5;
+  for(let d=0;d<=maxD;d+=xStep){
+    const xx=x(d);
+    ctx.beginPath();
+    ctx.moveTo(xx,pad.t);
+    ctx.lineTo(xx,H-pad.b);
+    ctx.stroke();
+    ctx.textAlign='center';
+    ctx.textBaseline='top';
+    ctx.fillText(Math.round(d)+' km',xx,H-pad.b+7);
+  }
+
+  ctx.strokeStyle='#111';
+  ctx.lineWidth=1.2;
+  ctx.beginPath();
+  ctx.moveTo(pad.l,pad.t);
+  ctx.lineTo(pad.l,H-pad.b);
+  ctx.lineTo(W-pad.r,H-pad.b);
+  ctx.stroke();
+
+  ctx.beginPath();
+  profileData.forEach((p,i)=>{
+    const xx=x(p[0]),yy=y(p[1]);
+    if(i===0)ctx.moveTo(xx,yy); else ctx.lineTo(xx,yy);
+  });
+  ctx.lineTo(x(maxD),H-pad.b);
+  ctx.lineTo(x(0),H-pad.b);
+  ctx.closePath();
+  ctx.fillStyle='rgba(17,17,17,.12)';
+  ctx.fill();
+
+  ctx.beginPath();
+  profileData.forEach((p,i)=>{
+    const xx=x(p[0]),yy=y(p[1]);
+    if(i===0)ctx.moveTo(xx,yy); else ctx.lineTo(xx,yy);
+  });
+  ctx.strokeStyle='#111';
+  ctx.lineWidth=1.8;
+  ctx.stroke();
+
+  activityBreaks.forEach(d=>{
+    const xx=x(d);
+    ctx.beginPath();
+    ctx.moveTo(xx,pad.t);
+    ctx.lineTo(xx,H-pad.b);
+    ctx.setLineDash([4,4]);
+    ctx.strokeStyle='#777';
+    ctx.lineWidth=1;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  canvas._geom={pad,pw,maxD};
+}
+
+function nearestProfile(d){
+  let lo=0,hi=profileData.length-1;
+  while(lo<hi){
+    const m=(lo+hi)>>1;
+    if(profileData[m][0]<d)lo=m+1;else hi=m;
+  }
+  if(lo>0 && Math.abs(profileData[lo-1][0]-d)<Math.abs(profileData[lo][0]-d))lo--;
+  return profileData[lo];
+}
+
+function profileMove(ev){
+  if(!profileData.length||!canvas._geom)return;
+  const rect=canvas.getBoundingClientRect();
+  const g=canvas._geom;
+  let mx=(ev.touches?ev.touches[0].clientX:ev.clientX)-rect.left;
+  mx=Math.max(g.pad.l,Math.min(rect.width-g.pad.r,mx));
+  const d=(mx-g.pad.l)/g.pw*g.maxD;
+  const p=nearestProfile(d);
+
+  document.getElementById('profileHover').textContent=
+    `${p[0].toFixed(1)} km · ${Math.round(p[1])} m`;
+
+  if(!profileMarker){
+    profileMarker=L.circleMarker([p[2],p[3]],{
+      radius:6,color:'#111',weight:2,fillColor:'#fff',fillOpacity:1
+    }).addTo(map);
+  }else{
+    profileMarker.setLatLng([p[2],p[3]]);
+  }
+}
+
+drawProfile();
+window.addEventListener('resize',drawProfile);
+canvas.addEventListener('mousemove',profileMove);
+canvas.addEventListener('touchmove',e=>{
+  profileMove(e);
+  e.preventDefault();
+},{passive:false});
 
 if(bounds.isValid()) map.fitBounds(bounds.pad(.05));
 else map.setView([49.8,14.2],8);
