@@ -3,38 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Z Tejna do Prahy oklikou – mapa</title>
+<title>Mapa — Z Tejna do Prahy oklikou</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-html,body{margin:0;height:100%;font-family:Arial,Helvetica,sans-serif;background:#f5f3ee;color:#111}
-.wrap{height:100%;display:flex;flex-direction:column}
-#map{flex:1;min-height:520px;background:#e9e7e0}
-.info{padding:11px 15px;border-top:1px solid #d9d5cc;background:#f5f3ee;font-size:12px;color:#777;display:flex;gap:18px;flex-wrap:wrap}
-.info strong{color:#111}
-.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#f5f3ee;color:#111}
-.leaflet-popup-content{margin:12px;width:260px!important}
-.media-popup img,.media-popup video{display:block;width:100%;max-height:260px;object-fit:contain;background:#111}
-.media-popup .name{margin-top:8px;font-size:12px;overflow-wrap:anywhere}
-.media-popup .time{margin-top:4px;color:#777;font-size:11px}
-.photo-marker,.video-marker{width:18px;height:18px;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,.35)}
-.photo-marker{background:#111}
-.video-marker{background:#777}
-.profile-wrap{height:225px;padding:12px 16px 8px;border-top:1px solid #d9d5cc;background:#f5f3ee}
-.profile-head{height:24px;display:flex;justify-content:space-between;font-size:12px;color:#777}
-.profile-head strong{color:#111;text-transform:uppercase;letter-spacing:.08em;font-size:11px}
-#profileCanvas{display:block;width:100%;height:175px}
-@media(max-width:600px){#map{min-height:390px}.profile-wrap{height:190px}.info{font-size:11px}#profileCanvas{height:145px}}
+:root{--bg:#f5f3ee;--text:#111;--muted:#777;--line:#d9d5cc}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);font-family:Arial,Helvetica,sans-serif}
+#layout{height:100%;display:grid;grid-template-rows:minmax(300px,1fr) 190px}
+#map{width:100%;height:100%}
+#profile-wrap{position:relative;border-top:1px solid var(--line);background:var(--bg);padding:8px 12px 10px}
+#profile{width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+.profile-title{position:absolute;left:18px;top:10px;z-index:3;font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;pointer-events:none}
+#info{position:absolute;right:18px;top:10px;z-index:3;font-size:11px;color:var(--muted);background:rgba(245,243,238,.92);padding:3px 5px;pointer-events:none}
+.leaflet-popup-content{margin:10px 12px;min-width:0}
+.media-popup{max-width:280px}
+.media-popup img{
+  display:block;
+  width:auto;
+  height:auto;
+  max-width:260px;
+  max-height:220px;
+  object-fit:contain;
+  margin:auto;
+  border-radius:3px
+}
+.media-popup video{
+  display:block;
+  width:auto;
+  max-width:260px;
+  max-height:220px;
+  margin:auto;
+  background:#000
+}
+.media-name{margin-top:6px;font-size:11px;color:#555;word-break:break-word;text-align:center}
+.position-marker{background:#111;border:3px solid white;border-radius:50%;box-shadow:0 1px 7px rgba(0,0,0,.35)}
+@media(max-width:600px){
+  #layout{grid-template-rows:minmax(240px,1fr) 165px}
+  #profile-wrap{padding:6px 6px 8px}
+  .profile-title{left:12px}
+  #info{right:10px}
+  .media-popup img,.media-popup video{max-width:220px;max-height:190px}
+}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div id="layout">
   <div id="map"></div>
-  <div class="profile-wrap">
-    <div class="profile-head">
-      <strong>Výškový profil</strong>
-      <span id="profileHover">Přejeď po profilu</span>
-    </div>
-    <canvas id="profileCanvas"></canvas>
+  <div id="profile-wrap">
+    <div class="profile-title">Výškový profil</div>
+    <div id="info"></div>
+    <svg id="profile" aria-label="Výškový profil"></svg>
   </div>
 </div>
 
@@ -45,207 +63,236 @@ html,body{margin:0;height:100%;font-family:Arial,Helvetica,sans-serif;background
 <script src="data/Videa_4.js"></script>
 <script src="data/profile_data.js"></script>
 <script>
-const map=L.map('map',{zoomControl:true});
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-  maxZoom:19,
-  attribution:'&copy; OpenStreetMap contributors'
-}).addTo(map);
-
-const bounds=L.latLngBounds();
-const routeGroup=L.featureGroup().addTo(map);
-
-function addRoute(fc){
-  if(!fc||!fc.features)return;
-  L.geoJSON(fc,{
-    style:{color:'#111',weight:4,opacity:.9},
-    onEachFeature:(feature,layer)=>{
-      const n=feature?.properties?.name;
-      if(n) layer.bindTooltip(n,{sticky:true});
-      layer.on('mouseover',()=>routeGroup.eachLayer(l=>l.setStyle&&l.setStyle({weight:6,opacity:1})));
-      layer.on('mouseout',()=>routeGroup.eachLayer(l=>l.setStyle&&l.setStyle({weight:4,opacity:.9})));
-    }
-  }).eachLayer(l=>{
-    routeGroup.addLayer(l);
-    if(l.getBounds) bounds.extend(l.getBounds());
-  });
-}
-addRoute(json_tracks_1);
-addRoute(json_tracks_2);
-
-function markerIcon(cls){
-  return L.divIcon({className:'',html:`<div class="${cls}"></div>`,iconSize:[18,18],iconAnchor:[9,9],popupAnchor:[0,-9]});
-}
-
-const photos=(json_Fotky_podle_casu_3?.features)||[];
-photos.forEach(f=>{
-  if(!f.geometry||f.geometry.type!=='Point')return;
-  const [lon,lat]=f.geometry.coordinates;
-  const p=f.properties||{};
-  const url=p.photo_url||'';
-  const m=L.marker([lat,lon],{icon:markerIcon('photo-marker')}).addTo(map);
-  m.bindPopup(`<div class="media-popup"><a href="${url}" target="_blank" rel="noopener"><img loading="lazy" src="${url}" alt=""></a><div class="name">${p.filename||''}</div><div class="time">${p.photo_time||''}</div></div>`,{maxWidth:300});
-  bounds.extend([lat,lon]);
-});
-
-document.getElementById('photoInfo').textContent=`Fotky: ${photos.length}`;
-
-const videos=(json_Videa_4?.features)||[];
-videos.forEach(f=>{
-  if(!f.geometry||f.geometry.type!=='Point')return;
-  const [lon,lat]=f.geometry.coordinates;
-  const p=f.properties||{};
-  const url=p.video_url||'';
-  const m=L.marker([lat,lon],{icon:markerIcon('video-marker')}).addTo(map);
-  m.bindPopup(`<div class="media-popup"><video controls preload="none" src="${url}"></video><div class="name">${p.filename||''}</div><div class="time">${p.video_time||''}</div></div>`,{maxWidth:300});
-  bounds.extend([lat,lon]);
-});
-
-document.getElementById('videoInfo').textContent=`Videa: ${videos.length}`;
-
-
 const profileData=window.ELEVATION_PROFILE||[];
 const activityBreaks=window.ACTIVITY_BREAKS||[];
-const canvas=document.getElementById('profileCanvas');
-const ctx=canvas.getContext('2d');
-let profileMarker=null;
+
+const map=L.map("map",{zoomControl:true});
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+  maxZoom:19,
+  attribution:"&copy; OpenStreetMap contributors"
+}).addTo(map);
+
+const allBounds=L.latLngBounds();
+
+function escapeHtml(value){
+  return String(value??"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;");
+}
+
+function addGeoJson(data,options){
+  if(!data||!data.type)return;
+  const layer=L.geoJSON(data,options).addTo(map);
+  try{
+    const b=layer.getBounds();
+    if(b&&b.isValid())allBounds.extend(b);
+  }catch(e){}
+}
+
+function photoPopup(feature){
+  const p=feature.properties||{};
+  const file=p.filename||p.bunny_file||"Fotka";
+  const url=p.photo_url||"";
+  if(!url)return escapeHtml(file);
+  return `<div class="media-popup">
+    <a href="${url}" target="_blank" rel="noopener">
+      <img loading="lazy" src="${url}" alt="${escapeHtml(file)}">
+    </a>
+    <div class="media-name">${escapeHtml(file)}</div>
+  </div>`;
+}
+
+function videoPopup(feature){
+  const p=feature.properties||{};
+  const file=p.filename||p.bunny_file||"Video";
+  const url=p.video_url||"";
+  if(!url)return escapeHtml(file);
+  return `<div class="media-popup">
+    <video controls preload="metadata" src="${url}"></video>
+    <div class="media-name">${escapeHtml(file)}</div>
+  </div>`;
+}
+
+addGeoJson(json_tracks_1,{style:{color:"#111",weight:4,opacity:.9}});
+addGeoJson(json_tracks_2,{style:{color:"#111",weight:4,opacity:.9}});
+
+addGeoJson(json_Fotky_podle_casu_3,{
+  pointToLayer:(f,ll)=>L.circleMarker(ll,{
+    radius:6,color:"#fff",weight:1.5,fillColor:"#111",fillOpacity:1
+  }),
+  onEachFeature:(f,l)=>l.bindPopup(photoPopup(f),{maxWidth:300})
+});
+
+addGeoJson(json_Videa_4,{
+  pointToLayer:(f,ll)=>L.circleMarker(ll,{
+    radius:7,color:"#fff",weight:2,fillColor:"#777",fillOpacity:1
+  }),
+  onEachFeature:(f,l)=>l.bindPopup(videoPopup(f),{maxWidth:300})
+});
+
+if(allBounds.isValid())map.fitBounds(allBounds,{padding:[25,25]});
+else map.setView([49.5,14.4],8);
+
+const positionIcon=L.divIcon({
+  className:"",
+  html:'<div class="position-marker" style="width:16px;height:16px"></div>',
+  iconSize:[16,16],
+  iconAnchor:[8,8]
+});
+const positionMarker=L.marker([0,0],{
+  icon:positionIcon,
+  interactive:false,
+  opacity:0
+}).addTo(map);
+
+const svg=document.getElementById("profile");
+const info=document.getElementById("info");
+const NS="http://www.w3.org/2000/svg";
+
+function el(tag,attrs={}){
+  const n=document.createElementNS(NS,tag);
+  for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);
+  return n;
+}
+
+function nearestProfileIndexByDistance(km){
+  let lo=0,hi=profileData.length-1;
+  while(lo<hi){
+    const mid=(lo+hi)>>1;
+    if(profileData[mid][0]<km)lo=mid+1;
+    else hi=mid;
+  }
+  if(lo>0&&Math.abs(profileData[lo-1][0]-km)<Math.abs(profileData[lo][0]-km))return lo-1;
+  return lo;
+}
 
 function drawProfile(){
-  if(!profileData.length)return;
+  svg.innerHTML="";
+  if(profileData.length<2)return;
 
-  const dpr=window.devicePixelRatio||1;
-  const rect=canvas.getBoundingClientRect();
-  canvas.width=Math.round(rect.width*dpr);
-  canvas.height=Math.round(rect.height*dpr);
-  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const box=svg.getBoundingClientRect();
+  const W=Math.max(320,box.width);
+  const H=Math.max(120,box.height);
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
 
-  const W=rect.width,H=rect.height;
-  const pad={l:55,r:15,t:10,b:28};
-  const pw=W-pad.l-pad.r;
-  const ph=H-pad.t-pad.b;
+  const pad={l:42,r:12,t:28,b:25};
+  const iw=W-pad.l-pad.r;
+  const ih=H-pad.t-pad.b;
   const maxD=profileData[profileData.length-1][0];
 
-  let minE=Math.min(...profileData.map(p=>p[1]));
-  let maxE=Math.max(...profileData.map(p=>p[1]));
-  minE=Math.floor(minE/50)*50;
-  maxE=Math.ceil(maxE/50)*50;
-  if(maxE===minE)maxE=minE+50;
+  let minA=Math.min(...profileData.map(p=>p[1]));
+  let maxA=Math.max(...profileData.map(p=>p[1]));
+  minA=Math.floor(minA/100)*100;
+  maxA=Math.ceil(maxA/100)*100;
+  if(maxA===minA)maxA=minA+100;
 
-  const x=d=>pad.l+(d/maxD)*pw;
-  const y=e=>pad.t+((maxE-e)/(maxE-minE))*ph;
+  const x=d=>pad.l+(d/maxD)*iw;
+  const y=a=>pad.t+(maxA-a)/(maxA-minA)*ih;
 
-  ctx.clearRect(0,0,W,H);
-  ctx.font='10px Arial';
-  ctx.fillStyle='#777';
-  ctx.strokeStyle='#d9d5cc';
-  ctx.lineWidth=1;
-
-  for(let e=minE;e<=maxE;e+=50){
-    const yy=y(e);
-    ctx.beginPath();
-    ctx.moveTo(pad.l,yy);
-    ctx.lineTo(W-pad.r,yy);
-    ctx.stroke();
-    ctx.textAlign='right';
-    ctx.textBaseline='middle';
-    ctx.fillText(e+' m',pad.l-7,yy);
+  for(let i=0;i<=3;i++){
+    const alt=minA+(maxA-minA)*(i/3);
+    const yy=y(alt);
+    svg.appendChild(el("line",{
+      x1:pad.l,y1:yy,x2:W-pad.r,y2:yy,
+      stroke:"#d9d5cc","stroke-width":"1"
+    }));
+    const t=el("text",{
+      x:pad.l-7,y:yy+4,"text-anchor":"end",
+      fill:"#777","font-size":"10"
+    });
+    t.textContent=Math.round(alt)+" m";
+    svg.appendChild(t);
   }
-
-  const xStep=maxD>150?25:maxD>75?10:5;
-  for(let d=0;d<=maxD;d+=xStep){
-    const xx=x(d);
-    ctx.beginPath();
-    ctx.moveTo(xx,pad.t);
-    ctx.lineTo(xx,H-pad.b);
-    ctx.stroke();
-    ctx.textAlign='center';
-    ctx.textBaseline='top';
-    ctx.fillText(Math.round(d)+' km',xx,H-pad.b+7);
-  }
-
-  ctx.strokeStyle='#111';
-  ctx.lineWidth=1.2;
-  ctx.beginPath();
-  ctx.moveTo(pad.l,pad.t);
-  ctx.lineTo(pad.l,H-pad.b);
-  ctx.lineTo(W-pad.r,H-pad.b);
-  ctx.stroke();
-
-  ctx.beginPath();
-  profileData.forEach((p,i)=>{
-    const xx=x(p[0]),yy=y(p[1]);
-    if(i===0)ctx.moveTo(xx,yy); else ctx.lineTo(xx,yy);
-  });
-  ctx.lineTo(x(maxD),H-pad.b);
-  ctx.lineTo(x(0),H-pad.b);
-  ctx.closePath();
-  ctx.fillStyle='rgba(17,17,17,.12)';
-  ctx.fill();
-
-  ctx.beginPath();
-  profileData.forEach((p,i)=>{
-    const xx=x(p[0]),yy=y(p[1]);
-    if(i===0)ctx.moveTo(xx,yy); else ctx.lineTo(xx,yy);
-  });
-  ctx.strokeStyle='#111';
-  ctx.lineWidth=1.8;
-  ctx.stroke();
 
   activityBreaks.forEach(d=>{
     const xx=x(d);
-    ctx.beginPath();
-    ctx.moveTo(xx,pad.t);
-    ctx.lineTo(xx,H-pad.b);
-    ctx.setLineDash([4,4]);
-    ctx.strokeStyle='#777';
-    ctx.lineWidth=1;
-    ctx.stroke();
-    ctx.setLineDash([]);
+    svg.appendChild(el("line",{
+      x1:xx,y1:pad.t,x2:xx,y2:H-pad.b,
+      stroke:"#aaa","stroke-width":"1","stroke-dasharray":"3 4"
+    }));
   });
 
-  canvas._geom={pad,pw,maxD};
-}
+  let area=`M ${x(profileData[0][0])} ${H-pad.b}`;
+  for(const p of profileData)area+=` L ${x(p[0])} ${y(p[1])}`;
+  area+=` L ${x(profileData[profileData.length-1][0])} ${H-pad.b} Z`;
+  svg.appendChild(el("path",{
+    d:area,fill:"rgba(17,17,17,.10)",stroke:"none"
+  }));
 
-function nearestProfile(d){
-  let lo=0,hi=profileData.length-1;
-  while(lo<hi){
-    const m=(lo+hi)>>1;
-    if(profileData[m][0]<d)lo=m+1;else hi=m;
+  let line="";
+  profileData.forEach((p,i)=>{
+    line+=(i===0?"M ":" L ")+x(p[0])+" "+y(p[1]);
+  });
+  svg.appendChild(el("path",{
+    d:line,fill:"none",stroke:"#111","stroke-width":"2",
+    "stroke-linejoin":"round","stroke-linecap":"round"
+  }));
+
+  const distSteps=W<600?3:8;
+  for(let i=0;i<=distSteps;i++){
+    const d=maxD*i/distSteps;
+    const xx=x(d);
+    const t=el("text",{
+      x:xx,y:H-7,
+      "text-anchor":i===0?"start":i===distSteps?"end":"middle",
+      fill:"#777","font-size":"10"
+    });
+    t.textContent=Math.round(d)+" km";
+    svg.appendChild(t);
   }
-  if(lo>0 && Math.abs(profileData[lo-1][0]-d)<Math.abs(profileData[lo][0]-d))lo--;
-  return profileData[lo];
-}
 
-function profileMove(ev){
-  if(!profileData.length||!canvas._geom)return;
-  const rect=canvas.getBoundingClientRect();
-  const g=canvas._geom;
-  let mx=(ev.touches?ev.touches[0].clientX:ev.clientX)-rect.left;
-  mx=Math.max(g.pad.l,Math.min(rect.width-g.pad.r,mx));
-  const d=(mx-g.pad.l)/g.pw*g.maxD;
-  const p=nearestProfile(d);
+  const cursor=el("line",{
+    x1:pad.l,y1:pad.t,x2:pad.l,y2:H-pad.b,
+    stroke:"#111","stroke-width":"1","stroke-dasharray":"3 3",opacity:"0"
+  });
+  const dot=el("circle",{
+    cx:pad.l,cy:pad.t,r:"4.5",
+    fill:"#111",stroke:"#fff","stroke-width":"2",opacity:"0"
+  });
+  svg.appendChild(cursor);
+  svg.appendChild(dot);
 
-  document.getElementById('profileHover').textContent=
-    `${p[0].toFixed(1)} km · ${Math.round(p[1])} m`;
+  function updateFromClientX(clientX){
+    const rect=svg.getBoundingClientRect();
+    let sx=(clientX-rect.left)*(W/rect.width);
+    sx=Math.max(pad.l,Math.min(W-pad.r,sx));
 
-  if(!profileMarker){
-    profileMarker=L.circleMarker([p[2],p[3]],{
-      radius:6,color:'#111',weight:2,fillColor:'#fff',fillOpacity:1
-    }).addTo(map);
-  }else{
-    profileMarker.setLatLng([p[2],p[3]]);
+    const km=((sx-pad.l)/iw)*maxD;
+    const idx=nearestProfileIndexByDistance(km);
+    const p=profileData[idx];
+
+    const xx=x(p[0]),yy=y(p[1]);
+    cursor.setAttribute("x1",xx);
+    cursor.setAttribute("x2",xx);
+    cursor.setAttribute("opacity","1");
+    dot.setAttribute("cx",xx);
+    dot.setAttribute("cy",yy);
+    dot.setAttribute("opacity","1");
+
+    info.textContent=`${p[0].toFixed(1)} km · ${Math.round(p[1])} m`;
+    positionMarker.setLatLng([p[2],p[3]]).setOpacity(1);
   }
+
+  svg.onpointermove=e=>updateFromClientX(e.clientX);
+  svg.onpointerdown=e=>{
+    svg.setPointerCapture?.(e.pointerId);
+    updateFromClientX(e.clientX);
+  };
+  svg.onpointerleave=()=>{
+    cursor.setAttribute("opacity","0");
+    dot.setAttribute("opacity","0");
+    positionMarker.setOpacity(0);
+    info.textContent="";
+  };
 }
 
 drawProfile();
-window.addEventListener('resize',drawProfile);
-canvas.addEventListener('mousemove',profileMove);
-canvas.addEventListener('touchmove',e=>{
-  profileMove(e);
-  e.preventDefault();
-},{passive:false});
-
-if(bounds.isValid()) map.fitBounds(bounds.pad(.05));
-else map.setView([49.8,14.2],8);
+window.addEventListener("resize",()=>{
+  clearTimeout(window.__profileResize);
+  window.__profileResize=setTimeout(drawProfile,100);
+});
 </script>
 </body>
 </html>
