@@ -754,6 +754,9 @@ function toggleVideos(){
 
 
 
+
+
+
 <!-- FLOATING-MEDIA-CLOSE:START -->
 <style>
 #floatingMediaClose{
@@ -864,6 +867,181 @@ function toggleVideos(){
 })();
 </script>
 <!-- FLOATING-MEDIA-CLOSE:END -->
+
+
+<!-- PHOTO-LIGHTBOX:START -->
+<style>
+#photoLightbox{
+  position:fixed;
+  inset:0;
+  z-index:100000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.92);
+  padding:28px 76px;
+}
+#photoLightbox.open{display:flex}
+#photoLightbox img{
+  display:block;
+  max-width:100%;
+  max-height:calc(100vh - 56px);
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+#photoLightbox button{
+  position:absolute;
+  border:0;
+  background:rgba(0,0,0,.35);
+  color:#fff;
+  cursor:pointer;
+  font-family:Arial,Helvetica,sans-serif;
+}
+#photoLightbox button:hover{background:rgba(255,255,255,.16)}
+#photoLightboxClose{
+  right:18px;
+  top:14px;
+  width:46px;
+  height:46px;
+  font-size:32px;
+  line-height:1;
+}
+.photoLightboxArrow{
+  top:50%;
+  transform:translateY(-50%);
+  width:54px;
+  height:74px;
+  font-size:44px;
+  line-height:1;
+}
+#photoLightboxPrev{left:12px}
+#photoLightboxNext{right:12px}
+#photoLightboxCounter{
+  position:absolute;
+  left:50%;
+  bottom:12px;
+  transform:translateX(-50%);
+  color:#fff;
+  font:600 11px Arial,Helvetica,sans-serif;
+  letter-spacing:.08em;
+  background:rgba(0,0,0,.38);
+  padding:5px 8px;
+  pointer-events:none;
+}
+@media(max-width:700px){
+  #photoLightbox{padding:58px 12px 62px}
+  .photoLightboxArrow{
+    top:auto;
+    bottom:8px;
+    transform:none;
+    width:54px;
+    height:46px;
+    font-size:36px;
+  }
+  #photoLightboxPrev{left:10px}
+  #photoLightboxNext{right:10px}
+  #photoLightboxClose{right:10px;top:8px}
+}
+</style>
+
+<div id="photoLightbox" role="dialog" aria-modal="true" aria-label="Fotogalerie">
+  <button id="photoLightboxClose" type="button" aria-label="Zavřít">×</button>
+  <button id="photoLightboxPrev" class="photoLightboxArrow" type="button" aria-label="Předchozí fotka">‹</button>
+  <img id="photoLightboxImage" alt="">
+  <button id="photoLightboxNext" class="photoLightboxArrow" type="button" aria-label="Další fotka">›</button>
+  <div id="photoLightboxCounter"></div>
+</div>
+
+<script>
+(()=>{
+  const box=document.getElementById('photoLightbox');
+  const image=document.getElementById('photoLightboxImage');
+  const prev=document.getElementById('photoLightboxPrev');
+  const next=document.getElementById('photoLightboxNext');
+  const close=document.getElementById('photoLightboxClose');
+  const counter=document.getElementById('photoLightboxCounter');
+  if(!box||!image)return;
+
+  let items=[];
+  let index=0;
+  let oldOverflow='';
+
+  function photoItems(){
+    const panel=document.getElementById('photosPanel');
+    if(!panel)return [];
+    const result=[];
+    panel.querySelectorAll('img').forEach(img=>{
+      const a=img.closest('a');
+      const url=(a&&a.href)||img.currentSrc||img.src;
+      if(!url)return;
+      if(!result.some(x=>x.url===url))result.push({url:url,alt:img.alt||''});
+    });
+    return result;
+  }
+
+  function render(){
+    if(!items.length)return;
+    if(index<0)index=items.length-1;
+    if(index>=items.length)index=0;
+    image.src=items[index].url;
+    image.alt=items[index].alt;
+    counter.textContent=(index+1)+' / '+items.length;
+
+    if(items.length>1){
+      const p=items[(index-1+items.length)%items.length];
+      const n=items[(index+1)%items.length];
+      const pi=new Image(); pi.src=p.url;
+      const ni=new Image(); ni.src=n.url;
+    }
+  }
+
+  function openAt(url){
+    items=photoItems();
+    if(!items.length)return;
+    const found=items.findIndex(x=>x.url===url);
+    index=found>=0?found:0;
+    oldOverflow=document.body.style.overflow;
+    document.body.style.overflow='hidden';
+    box.classList.add('open');
+    render();
+    close.focus({preventScroll:true});
+  }
+
+  function hide(){
+    box.classList.remove('open');
+    image.removeAttribute('src');
+    document.body.style.overflow=oldOverflow;
+  }
+
+  document.addEventListener('click',e=>{
+    const panel=e.target.closest('#photosPanel');
+    const img=e.target.closest('#photosPanel img');
+    if(!panel||!img)return;
+    const a=img.closest('a');
+    const url=(a&&a.href)||img.currentSrc||img.src;
+    if(!url)return;
+    e.preventDefault();
+    e.stopPropagation();
+    openAt(url);
+  },true);
+
+  prev.addEventListener('click',e=>{e.stopPropagation();index--;render()});
+  next.addEventListener('click',e=>{e.stopPropagation();index++;render()});
+  close.addEventListener('click',hide);
+  box.addEventListener('click',e=>{if(e.target===box)hide()});
+
+  document.addEventListener('keydown',e=>{
+    if(!box.classList.contains('open'))return;
+    if(e.key==='Escape'){e.preventDefault();hide()}
+    else if(e.key==='ArrowLeft'){e.preventDefault();index--;render()}
+    else if(e.key==='ArrowRight'){e.preventDefault();index++;render()}
+  });
+})();
+</script>
+<!-- PHOTO-LIGHTBOX:END -->
 
 </body>
 </html>
