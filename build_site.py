@@ -443,6 +443,119 @@ def add_photo_lightbox(path):
 for detail in Path('.').glob('*/detail.html'):
     add_photo_lightbox(detail)
 
+
+# POPUPY S FOTKOU / VIDEEM NA MAPE — BEZ RAMECKU A BEZ NAZVU SOUBORU
+MEDIA_POPUP_START = '<!-- MEDIA-POPUP:START -->'
+MEDIA_POPUP_END = '<!-- MEDIA-POPUP:END -->'
+
+MEDIA_POPUP_BLOCK = r"""
+<!-- MEDIA-POPUP:START -->
+<style>
+.leaflet-popup.media-popup .leaflet-popup-content-wrapper{
+  padding:0;
+  background:transparent;
+  box-shadow:none;
+  border-radius:0;
+}
+.leaflet-popup.media-popup .leaflet-popup-content{
+  margin:0;
+  line-height:0;
+  overflow:visible !important;
+  border:0 !important;
+}
+.leaflet-popup.media-popup table{border-collapse:collapse;border-spacing:0}
+.leaflet-popup.media-popup td,
+.leaflet-popup.media-popup th,
+.leaflet-popup.media-popup a{padding:0 !important;margin:0 !important;border:0 !important}
+.leaflet-popup.media-popup img,
+.leaflet-popup.media-popup video{
+  display:block;
+  width:auto !important;
+  height:auto !important;
+  max-width:300px !important;
+  max-height:320px !important;
+  margin:0 !important;
+  border-radius:10px;
+  box-shadow:0 4px 16px rgba(0,0,0,.45);
+  background:#000;
+}
+.leaflet-popup.media-popup .leaflet-popup-tip-container{display:none}
+.leaflet-popup.media-popup a.leaflet-popup-close-button{
+  top:6px;
+  right:6px;
+  z-index:2;
+  width:26px;
+  height:26px;
+  font:400 20px/24px Arial,Helvetica,sans-serif;
+  text-align:center;
+  border-radius:50%;
+  background:rgba(0,0,0,.55);
+  color:#fff;
+}
+.leaflet-popup.media-popup a.leaflet-popup-close-button:hover{background:rgba(0,0,0,.8);color:#fff}
+@media(max-width:600px){
+  .leaflet-popup.media-popup img,
+  .leaflet-popup.media-popup video{max-width:240px !important;max-height:260px !important}
+}
+</style>
+
+<script>
+(()=>{
+  if(!window.L || !L.Popup || L.Popup.prototype._mediaPopupPatched)return;
+  const MEDIA='img,video';
+
+  // Ponecha jen fotku/video (a prvky, ktere je obaluji), vse ostatni smaze.
+  function prune(el){
+    [...el.childNodes].forEach(n=>{
+      if(n.nodeType===1 && (n.matches(MEDIA) || n.querySelector(MEDIA))){
+        if(!n.matches(MEDIA))prune(n);
+      }else{
+        n.remove();
+      }
+    });
+  }
+
+  const orig=L.Popup.prototype._updateContent;
+  L.Popup.prototype._updateContent=function(){
+    orig.apply(this,arguments);
+    const content=this._contentNode, box=this._container;
+    if(!content || !box)return;
+    if(!content.querySelector(MEDIA)){box.classList.remove('media-popup');return}
+    box.classList.add('media-popup');
+    prune(content);
+
+    // Po nacteni fotky/videa prepocitat velikost a pozici popupu.
+    const popup=this;
+    const relayout=()=>{
+      if(popup._map && popup._container===box){
+        popup._updateLayout();
+        popup._updatePosition();
+      }
+    };
+    content.querySelectorAll('img').forEach(i=>{if(!i.complete)i.addEventListener('load',relayout,{once:true})});
+    content.querySelectorAll('video').forEach(v=>{if(v.readyState<1)v.addEventListener('loadedmetadata',relayout,{once:true})});
+  };
+  L.Popup.prototype._mediaPopupPatched=true;
+})();
+</script>
+<!-- MEDIA-POPUP:END -->
+"""
+
+def add_media_popup(path):
+    html=path.read_text(encoding='utf-8',errors='ignore')
+
+    # Pri opakovanem behu nejdriv odstranit starsi verzi.
+    if MEDIA_POPUP_START in html and MEDIA_POPUP_END in html:
+        html=html.split(MEDIA_POPUP_START,1)[0]+html.split(MEDIA_POPUP_END,1)[1]
+
+    if '</body>' in html:
+        html=html.replace('</body>',MEDIA_POPUP_BLOCK+'\n</body>',1)
+        path.write_text(html,encoding='utf-8')
+        print('Media popup:',path)
+
+for detail in Path('.').glob('*/detail.html'):
+    add_media_popup(detail)
+
 # CARD.JSON
 cards=[]
 for cp in Path('.').glob('*/card.json'):
